@@ -4,13 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= course.name %> - Think different Academy</title>
+  <link rel="stylesheet" href="/css/common.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; min-height: 100vh; }
-    .navbar { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    .navbar a { color: #333; text-decoration: none; margin-left: 1.5rem; font-weight: 500; }
-    .navbar a:hover { color: #667eea; }
-    .logo { font-weight: bold; font-size: 1.5rem; color: #667eea; }
     .container { max-width: 800px; margin: 0 auto; padding: 2rem; }
     .back-link { display: inline-block; margin-bottom: 1.5rem; color: #667eea; text-decoration: none; }
     .back-link:hover { text-decoration: underline; }
@@ -22,11 +17,11 @@
     .section h2 { color: #333; margin-bottom: 1rem; font-size: 1.3rem; }
     .empty-section { color: #888; font-style: italic; }
     .materials-list { list-style: none; }
-    .material-item { display: flex; align-items: center; padding: 1rem; background: #f8f9fa; border-radius: 8px; margin-bottom: 0.75rem; }
+    .material-item { display: flex; align-items: center; padding: 1rem; background: #f8f9fa; border-radius: 8px; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem; }
     .material-item:hover { background: #e9ecef; }
-    .material-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #667eea; color: white; border-radius: 8px; margin-right: 1rem; font-size: 1.2rem; }
+    .material-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #667eea; color: white; border-radius: 8px; font-size: 1.2rem; flex-shrink: 0; }
     .material-icon.link { background: #28a745; }
-    .material-info { flex: 1; }
+    .material-info { flex: 1; min-width: 150px; }
     .material-name { font-weight: 600; color: #333; margin-bottom: 0.25rem; }
     .material-desc { font-size: 0.9rem; color: #666; }
     .material-meta { font-size: 0.8rem; color: #888; margin-top: 0.25rem; }
@@ -35,14 +30,14 @@
     .material-action.link { background: #28a745; }
     .material-action.link:hover { background: #218838; }
     .quiz-list { list-style: none; }
-    .quiz-item { display: flex; align-items: center; padding: 1rem; background: #f8f9fa; border-radius: 8px; margin-bottom: 0.75rem; }
+    .quiz-item { display: flex; align-items: center; padding: 1rem; background: #f8f9fa; border-radius: 8px; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem; }
     .quiz-item:hover { background: #e9ecef; }
-    .quiz-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #ffc107; color: white; border-radius: 8px; margin-right: 1rem; font-size: 1.2rem; }
-    .quiz-info { flex: 1; }
+    .quiz-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #ffc107; color: white; border-radius: 8px; font-size: 1.2rem; flex-shrink: 0; }
+    .quiz-info { flex: 1; min-width: 150px; }
     .quiz-name { font-weight: 600; color: #333; margin-bottom: 0.25rem; }
     .quiz-desc { font-size: 0.9rem; color: #666; }
     .quiz-meta { font-size: 0.8rem; color: #888; margin-top: 0.25rem; }
-    .quiz-action { padding: 0.5rem 1rem; background: #ffc107; color: #333; text-decoration: none; border-radius: 5px; font-size: 0.9rem; font-weight: 500; }
+    .quiz-action { padding: 0.5rem 1rem; background: #ffc107; color: #333; text-decoration: none; border-radius: 5px; font-size: 0.9rem; font-weight: 500; border: none; cursor: pointer; }
     .quiz-action:hover { background: #e0a800; }
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; }
     .modal.active { display: flex; justify-content: center; align-items: flex-start; padding: 2rem; }
@@ -67,22 +62,37 @@
     .result-item.incorrect { background: #f8d7da; border-left: 4px solid #dc3545; }
     .result-item .question-text { margin-bottom: 0.5rem; }
     .correct-answer { font-size: 0.9rem; color: #28a745; }
+    /* Feed styles */
+    .feed-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #eee; }
+    .feed-section h2 { color: #333; margin-bottom: 1rem; font-size: 1.3rem; }
+    .feed-form { margin-bottom: 1.5rem; }
+    .feed-form textarea { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; resize: vertical; min-height: 80px; font-family: inherit; font-size: 1rem; }
+    .feed-form button { margin-top: 0.5rem; padding: 0.6rem 1.2rem; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem; }
+    .feed-form button:hover { background: #5a6fd6; }
+    .feed-list { list-style: none; }
+    .feed-entry { background: #f8f9fa; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; position: relative; }
+    .feed-entry.teacher { border-left: 4px solid #667eea; }
+    .feed-entry.autogen { border-left: 4px solid #28a745; }
+    .feed-entry .meta { font-size: 0.8rem; color: #888; margin-bottom: 0.5rem; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .feed-entry .meta .badge { background: #667eea; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; }
+    .feed-entry .meta .badge.autogen { background: #28a745; }
+    .feed-entry .content { color: #333; line-height: 1.6; }
+    .feed-entry .edited { font-size: 0.75rem; color: #888; font-style: italic; }
+    .feed-entry .actions { margin-top: 0.5rem; display: flex; gap: 0.5rem; }
+    .feed-entry .actions button { background: none; border: none; color: #667eea; cursor: pointer; font-size: 0.85rem; padding: 0; }
+    .feed-entry .actions button:hover { text-decoration: underline; }
+    .feed-entry .actions button.del { color: #dc3545; }
+    @media (max-width: 768px) {
+      .container { padding: 1rem; }
+      .course-detail { padding: 1.5rem; }
+      .course-detail h1 { font-size: 1.5rem; }
+      .modal-content { padding: 1rem; margin: 1rem; }
+    }
+    .navbar { background: var(--brand-primary); }
   </style>
 </head>
 <body>
-  <nav class="navbar">
-    <span class="logo">Think different Academy</span>
-    <div>
-      <a href="/">Domů</a>
-      <a href="/courses">Kurzy</a>
-      <% if (user) { %>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/logout">Odhlásit</a>
-      <% } else { %>
-        <a href="/login">Přihlásit</a>
-      <% } %>
-    </div>
-  </nav>
+  <%- include('partials/header') %>
   <div class="container">
     <a href="/courses" class="back-link">← Zpět na seznam kurzů</a>
     
@@ -146,6 +156,20 @@
         <% } else { %>
           <p class="empty-section">Žádné kvízy zatím nejsou k dispozici.</p>
         <% } %>
+      </div>
+
+      <!-- Feed section -->
+      <div class="feed-section section">
+        <h2>Informační kanál</h2>
+        <% if (user) { %>
+          <div class="feed-form">
+            <textarea id="feed-text" placeholder="Napište zprávu pro účastníky kurzu..."></textarea>
+            <button id="feed-submit">Odeslat příspěvek</button>
+          </div>
+        <% } %>
+        <ul class="feed-list" id="feed-list">
+          <li style="color:#888;font-style:italic;">Načítám kanál...</li>
+        </ul>
       </div>
     </div>
   </div>
@@ -282,6 +306,107 @@
         location.reload();
       }
     });
+
+    // ==================== FEED ====================
+    const isUser = <%= user ? 'true' : 'false' %>;
+    const feedList = document.getElementById('feed-list');
+
+    function formatTime(iso) {
+      return new Date(iso).toLocaleString('cs-CZ');
+    }
+
+    function renderFeed(entries) {
+      if (!entries || entries.length === 0) {
+        feedList.innerHTML = '<li style="color:#888;font-style:italic;">Zatím žádné příspěvky.</li>';
+        return;
+      }
+      feedList.innerHTML = entries.map(e => {
+        const badgeClass = e.type === 'TEACHER' ? '' : 'autogen';
+        const entryClass = e.type === 'TEACHER' ? 'teacher' : 'autogen';
+        const badgeText = e.type === 'TEACHER' ? 'Lektor' : 'Systém';
+        const edited = e.editedAt ? `<span class="edited">(upraveno ${formatTime(e.editedAt)})</span>` : '';
+        const actions = isUser ? `<div class="actions"><button onclick="editEntry('${e.uuid}')">Upravit</button><button class="del" onclick="deleteEntry('${e.uuid}')">Smazat</button></div>` : '';
+        return `<li class="feed-entry ${entryClass}" data-uuid="${e.uuid}"><div class="meta"><span class="badge ${badgeClass}">${badgeText}</span><span>${formatTime(e.createdAt)}</span>${edited}</div><div class="content">${escapeHtml(e.content)}</div>${actions}</li>`;
+      }).join('');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // Initial fetch
+    fetch(`/api/courses/${courseUuid}/feed`).then(r => r.json()).then(renderFeed).catch(() => {
+      feedList.innerHTML = '<li style="color:#dc3545;">Chyba při načítání kanálu.</li>';
+    });
+
+    // SSE
+    const evtSource = new EventSource(`/api/courses/${courseUuid}/feed/stream`);
+    evtSource.addEventListener('init', e => {
+      renderFeed(JSON.parse(e.data));
+    });
+    evtSource.addEventListener('new_entry', e => {
+      fetch(`/api/courses/${courseUuid}/feed`).then(r => r.json()).then(renderFeed);
+    });
+    evtSource.addEventListener('updated_entry', e => {
+      fetch(`/api/courses/${courseUuid}/feed`).then(r => r.json()).then(renderFeed);
+    });
+    evtSource.addEventListener('deleted_entry', e => {
+      fetch(`/api/courses/${courseUuid}/feed`).then(r => r.json()).then(renderFeed);
+    });
+
+    // Submit new post
+    const feedSubmitBtn = document.getElementById('feed-submit');
+    if (feedSubmitBtn) {
+      feedSubmitBtn.addEventListener('click', () => {
+        const textarea = document.getElementById('feed-text');
+        const text = textarea.value.trim();
+        if (!text) return;
+        fetch(`/api/courses/${courseUuid}/feed`, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        }).then(r => {
+          if (!r.ok) throw new Error('failed');
+          textarea.value = '';
+        }).catch(() => alert('Nepodařilo se odeslat příspěvek'));
+      });
+    }
+
+    function editEntry(uuid) {
+      const entryEl = feedList.querySelector(`[data-uuid="${uuid}"]`);
+      if (!entryEl) return;
+      const current = entryEl.querySelector('.content').textContent;
+      const newText = prompt('Upravit příspěvek', current);
+      if (newText === null) return;
+      fetch(`/api/courses/${courseUuid}/feed/${uuid}`, {
+        method: 'PATCH',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: newText })
+      }).then(r => { if (!r.ok) alert('Chyba při úpravě'); });
+    }
+
+    function deleteEntry(uuid) {
+      if (!confirm('Opravdu smazat příspěvek?')) return;
+      fetch(`/api/courses/${courseUuid}/feed/${uuid}`, {
+        method: 'DELETE',
+        credentials: 'same-origin'
+      }).then(r => { if (!r.ok) alert('Chyba při mazání'); });
+    }
+
+    // Burger menu
+    const burger = document.getElementById('burgerBtn');
+    const navLinks = document.getElementById('navLinks');
+    const overlay = document.getElementById('navOverlay');
+    function toggleMenu() {
+      burger.classList.toggle('active');
+      navLinks.classList.toggle('active');
+      overlay.classList.toggle('active');
+    }
+    burger.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', toggleMenu);
   </script>
 </body>
 </html>

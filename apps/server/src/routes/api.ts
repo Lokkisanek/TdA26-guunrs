@@ -1,4 +1,5 @@
-import { Router } from "express";
+import { Router, type Response } from "express";
+import { isAuthenticated } from "../middleware/auth.js";
 
 const apiRouter = Router();
 
@@ -7,6 +8,23 @@ const emptyCollections = () => ({
   quizzes: [] as unknown[],
   feed: [] as unknown[],
 });
+
+// SSE clients per courseId
+const sseClients = new Map<string, Set<Response>>();
+
+function sendSseToCourse(courseId: string, event: string, payload: unknown) {
+  const clients = sseClients.get(courseId);
+  if (!clients) return;
+  const data = JSON.stringify(payload);
+  for (const res of clients) {
+    try {
+      res.write(`event: ${event}\n`);
+      res.write(`data: ${data}\n\n`);
+    } catch (e) {
+      // ignore write errors
+    }
+  }
+}
 
 type DbCourse = {
   id: string;
@@ -121,6 +139,117 @@ apiRouter.delete("/courses/:id", async (req, res, next) => {
   try {
     await req.prisma.course.delete({ where: { id: req.params.id } });
     res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Feed: list entries for course
+apiRouter.get("/courses/:id/feed", async (req, res, next) => {
+  try {
+    const entries = await req.prisma.feedEntry.findMany({
+      where: { courseId: req.params.id, deleted: false },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(entries);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Create teacher post
+apiRouter.post("/courses/:id/feed", isAuthenticated, async (req, res, next) => {
+  try {
+    const text = typeof req.body?.text === "string" ? req.body.text.trim() : "";
+    if (!text) return res.status(400).json({ error: "Field 'text' is required" });
+
+    const course = await req.prisma.course.findUnique({ where: { id: req.params.id } });
+    if (!course) return res.status(404).json({ error: "Course not found" });
+
+    const created = await req.prisma.feedEntry.create({
+      data: {
+        courseId: course.id,
+        type: "TEACHER",
+        content: text,
+      },
+    });
+
+    sendSseToCourse(course.id, "new_entry", created);
+    res.status(201).json(created);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Edit teacher post
+apiRouter.patch("/courses/:id/feed/:entryId", isAuthenticated, async (req, res, next) => {
+  try {
+    const text = typeof req.body?.text === "string" ? req.body.text.trim() : undefined;
+    if (text === undefined) return res.status(400).json({ error: "Field 'text' is required" });
+
+    const updated = await req.prisma.feedEntry.updateMany({
+      where: { id: req.params.entryId, courseId: req.params.id, deleted: false, type: "TEACHER" },
+      data: { content: text, editedAt: new Date() },
+    });
+
+    if (updated.count === 0) return res.status(404).json({ error: "Entry not found or not editable" });
+
+    const entry = await req.prisma.feedEntry.findUnique({ where: { id: req.params.entryId } });
+    if (entry) sendSseToCourse(req.params.id, "updated_entry", entry);
+    res.json(entry);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Soft-delete entry
+apiRouter.delete("/courses/:id/feed/:entryId", isAuthenticated, async (req, res, next) => {
+  try {
+    const updated = await req.prisma.feedEntry.updateMany({
+      where: { id: req.params.entryId, courseId: req.params.id, deleted: false },
+      data: { deleted: true },
+    });
+    if (updated.count === 0) return res.status(404).json({ error: "Entry not found" });
+    sendSseToCourse(req.params.id, "deleted_entry", { id: req.params.entryId });
+    res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// SSE stream for course feed
+apiRouter.get("/courses/:id/feed/stream", async (req, res, next) => {
+  try {
+    const courseId = req.params.id;
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders?.();
+
+    // add client
+    let clients = sseClients.get(courseId);
+    if (!clients) {
+      clients = new Set<Response>();
+      sseClients.set(courseId, clients);
+    }
+    clients.add(res);
+
+    // send initial state
+    const entries = await req.prisma.feedEntry.findMany({ where: { courseId, deleted: false }, orderBy: { createdAt: "desc" } });
+    res.write("event: init\n");
+    res.write(`data: ${JSON.stringify(entries)}\n\n`);
+
+    // heartbeat to keep connection alive
+    const keepAlive = setInterval(() => {
+      try {
+        res.write(":\n\n");
+      } catch (e) {}
+    }, 25000);
+
+    req.on("close", () => {
+      clearInterval(keepAlive);
+      clients?.delete(res);
+    });
   } catch (error) {
     next(error);
   }

@@ -4,38 +4,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Think different Academy</title>
+  <link rel="stylesheet" href="/css/common.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
-    .navbar { background: rgba(255,255,255,0.95); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    .navbar a { color: #333; text-decoration: none; margin-left: 1.5rem; font-weight: 500; }
-    .navbar a:hover { color: #667eea; }
-    .logo { font-weight: bold; font-size: 1.5rem; color: #667eea; }
+    /* swapped: body uses brand-primary, navbar uses the previous home color */
+    body { background: var(--brand-primary); }
+    .navbar { background: #0257A5; }
     .hero { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; text-align: center; color: white; padding: 2rem; }
+    .home-logo { height: 280px; width: auto; margin-bottom: 2rem; }
+    .hero .lead { font-size: 1.25rem; margin-bottom: 1.75rem; opacity: 0.95; }
     .hero h1 { font-size: 3.5rem; margin-bottom: 1rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
-    .hero p { font-size: 1.5rem; margin-bottom: 2rem; opacity: 0.9; }
-    .btn { display: inline-block; padding: 1rem 2.5rem; background: white; color: #667eea; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 1.1rem; transition: transform 0.2s, box-shadow 0.2s; }
-    .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+    .hero p { font-size: 1.5rem; margin-bottom: 2.5rem; opacity: 0.9; }
+    /* CTA uses .btn-cta from common.css */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.2rem; }
+      .hero p { font-size: 1.1rem; }
+      /* reduce main logo 20% on smaller devices */
+      .home-logo { height: 224px; }
+    }
   </style>
 </head>
 <body>
-  <nav class="navbar">
-    <span class="logo">Think different Academy</span>
-    <div>
-      <a href="/">Domů</a>
-      <a href="/courses">Kurzy</a>
-      <% if (user) { %>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/logout">Odhlásit</a>
-      <% } else { %>
-        <a href="/login">Přihlásit</a>
-      <% } %>
-    </div>
-  </nav>
+  <%- include('partials/header') %>
   <div class="hero">
-    <h1>Hello TdA</h1>
-    <p>Vítejte v Think different Academy - online vzdělávací platformě</p>
-    <a href="/courses" class="btn">Prohlédnout kurzy</a>
+    <!-- Main logo (centered) -->
+    <img class="home-logo" src="/img/Think-different-Academy_LOGO_oficialni-bile2.svg" alt="Think different Academy logo">
+
+    <!-- Short lead text -->
+    <p class="lead">Vítejte v Think different Academy — správa kurzů a interaktivní výuka pro studenty i lektory.</p>
+
+    <!-- CTA button (elevated brand style) -->
+    <a class="btn-cta" href="/courses" aria-label="Prohlédnout kurzy">
+      <span>Prohlédnout kurzy</span>
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 5l8 7-8 7" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
   </div>
 </body>
 </html>

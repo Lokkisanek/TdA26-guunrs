@@ -9,7 +9,93 @@
     <div class="course-body">
       <p><%= course.description || 'Bez popisu' %></p>
     </div>
+    <section class="feed">
+      <h2>Informační kanál</h2>
+      <% if (user) { %>
+        <form id="feed-form">
+          <textarea id="feed-text" rows="3" placeholder="Napište zprávu..." required></textarea>
+          <button type="submit" class="btn">Odeslat</button>
+        </form>
+      <% } %>
+      <div id="feed-list">
+        <p>Načítám...</p>
+      </div>
+    </section>
     <a href="/courses" class="btn secondary">Zpět na kurzy</a>
   <% } %>
 </section>
 <%- include('partials/footer') %>
+
+<script>
+  (function () {
+    const courseId = "<%= course.id %>";
+    const feedList = document.getElementById('feed-list');
+    const isUser = <%= user ? 'true' : 'false' %>;
+
+    function render(entries) {
+      if (!entries || entries.length === 0) {
+        feedList.innerHTML = '<p>Žádné příspěvky.</p>';
+        return;
+      }
+      feedList.innerHTML = entries.map(e => {
+        const time = new Date(e.createdAt).toLocaleString();
+        const edited = e.editedAt ? ' <em>(upraveno)</em>' : '';
+        return `<div class="feed-entry" data-id="${e.id}"><div class="meta"><strong>${e.type}</strong> — <span class="time">${time}</span>${edited}</div><div class="content">${(e.content||'')}</div>${isUser ? `<div class="actions"><button class="edit">Upravit</button><button class="del">Smazat</button></div>` : ''}</div>`;
+      }).join('');
+
+      // attach actions
+      feedList.querySelectorAll('.del').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+          const entryEl = ev.target.closest('.feed-entry');
+          const id = entryEl.dataset.id;
+          fetch(`/api/courses/${courseId}/feed/${id}`, { method: 'DELETE', credentials: 'same-origin' }).then(r => {
+            if (!r.ok) alert('Chyba při mazání');
+          });
+        });
+      });
+
+      feedList.querySelectorAll('.edit').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+          const entryEl = ev.target.closest('.feed-entry');
+          const id = entryEl.dataset.id;
+          const current = entryEl.querySelector('.content').textContent;
+          const text = prompt('Upravit příspěvek', current);
+          if (text === null) return;
+          fetch(`/api/courses/${courseId}/feed/${id}`, { method: 'PATCH', credentials: 'same-origin', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ text }) }).then(r=>{ if(!r.ok) alert('Chyba při úpravě'); });
+        });
+      });
+    }
+
+    // initial load
+    fetch(`/api/courses/${courseId}/feed`).then(r=>r.json()).then(render).catch(()=>{ feedList.innerHTML = '<p>Chyba při načítání kanálu.</p>'; });
+
+    // SSE
+    const es = new EventSource(`/api/courses/${courseId}/feed/stream`);
+    es.addEventListener('init', (ev) => {
+      const entries = JSON.parse(ev.data);
+      render(entries);
+    });
+    es.addEventListener('new_entry', (ev) => {
+      const entry = JSON.parse(ev.data);
+      // prepend
+      const current = Array.from(feedList.querySelectorAll('.feed-entry')).map(el=>({ id: el.dataset.id }));
+      fetch(`/api/courses/${courseId}/feed`).then(r=>r.json()).then(render);
+    });
+    es.addEventListener('updated_entry', (ev) => { fetch(`/api/courses/${courseId}/feed`).then(r=>r.json()).then(render); });
+    es.addEventListener('deleted_entry', (ev) => { fetch(`/api/courses/${courseId}/feed`).then(r=>r.json()).then(render); });
+
+    // form submit
+    const form = document.getElementById('feed-form');
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = document.getElementById('feed-text').value.trim();
+        if (!text) return;
+        fetch(`/api/courses/${courseId}/feed`, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) })
+          .then(r => { if (!r.ok) throw new Error('error'); return r.json(); })
+          .then(() => { document.getElementById('feed-text').value = ''; })
+          .catch(() => alert('Nepodařilo se odeslat příspěvek'));
+      });
+    }
+  })();
+</script>

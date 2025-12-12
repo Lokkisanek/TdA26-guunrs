@@ -24,6 +24,27 @@ async function main() {
   await prisma.course.deleteMany();
   await prisma.course.createMany({ data: seedCourses });
   console.log("Seed: kurzy vytvořeny");
+  // create some sample feed entries for the first course
+  const first = await prisma.course.findFirst({ where: {} });
+  if (first) {
+    await prisma.feedEntry.deleteMany({ where: { courseId: first.id } });
+    await prisma.feedEntry.createMany({
+      data: [
+        {
+          courseId: first.id,
+          type: "AUTOGEN",
+          content: "Kurz byl vytvořen automaticky při seedování.",
+          event: "course_created",
+        },
+        {
+          courseId: first.id,
+          type: "TEACHER",
+          content: "Vítejte v kurzu — těším se na vás!",
+        },
+      ],
+    });
+    console.log("Seed: feed entries vytvořeny pro první kurz");
+  }
 }
 
 main()

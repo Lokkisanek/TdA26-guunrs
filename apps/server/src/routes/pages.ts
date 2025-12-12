@@ -18,8 +18,8 @@ router.get("/courses", async (req, res, next) => {
       where: search
         ? {
             OR: [
-              { title: { contains: search, mode: "insensitive" } },
-              { shortDescription: { contains: search, mode: "insensitive" } },
+              { title: { contains: search } },
+              { shortDescription: { contains: search } },
             ],
           }
         : undefined,
