@@ -9,6 +9,7 @@ RUN npm install
 
 COPY server.js ./
 COPY views ./views
+COPY public ./public
 
 # Create uploads directory
 RUN mkdir -p /app/uploads
