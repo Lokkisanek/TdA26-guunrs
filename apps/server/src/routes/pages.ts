@@ -11,6 +11,14 @@ router.get("/", (_req, res) => {
   res.render("home", { title: "TdA Academy" });
 });
 
+router.get("/privacy-policy", (_req, res) => {
+  res.render("privacy-policy", { title: "Ochrana soukromí" });
+});
+
+router.get("/terms", (_req, res) => {
+  res.render("terms", { title: "Podmínky užití" });
+});
+
 router.get("/courses", async (req, res, next) => {
   try {
     const search = req.query.search?.toString().trim() ?? "";

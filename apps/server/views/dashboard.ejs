@@ -7,33 +7,38 @@
   <link rel="stylesheet" href="/css/common.css">
   <style>
     .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
-    h1 { color: #333; margin-bottom: 0.5rem; }
+    h1 { color: var(--brand-blue-dark); margin-bottom: 0.5rem; }
     .subtitle { color: #666; margin-bottom: 2rem; }
-    .card { background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 2rem; }
-    .card h2 { color: #333; margin-bottom: 1rem; font-size: 1.3rem; }
+    /* Flat cards consistent with site aesthetic */
+    .card { background: #ffffff; border-radius: 0; padding: 1.5rem; box-shadow: none; margin-bottom: 2rem; border-top: 6px solid var(--brand-primary); }
+    .card h2 { color: var(--brand-blue-dark); margin-bottom: 1rem; font-size: 1.3rem; }
     .form-row { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
     .form-group { flex: 1; min-width: 200px; }
     .form-group label { display: block; margin-bottom: 0.5rem; color: #555; font-weight: 500; }
-    .form-group input, .form-group textarea { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 5px; font-size: 1rem; }
+    .form-group input, .form-group textarea { width: 100%; padding: 0.75rem; border: 1px solid rgba(0,0,0,0.06); border-radius: 0; font-size: 1rem; background: #fff; }
     .form-group textarea { resize: vertical; min-height: 80px; }
-    .btn { padding: 0.75rem 1.5rem; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: 500; text-decoration: none; display: inline-block; }
-    .btn:hover { background: #5a6fd6; }
-    .btn-danger { background: #dc3545; }
-    .btn-danger:hover { background: #c82333; }
-    .btn-secondary { background: #6c757d; }
-    .btn-secondary:hover { background: #5a6268; }
+    /* Buttons: rectangular with small radius to match site */
+    .btn { padding: 0.6rem 1rem; background: var(--brand-primary); color: #fff; border: 2px solid rgba(0,0,0,0.06); border-radius: 6px; cursor: pointer; font-size: 0.95rem; font-weight:700; text-decoration: none; display: inline-block; }
+    .btn:hover { filter: brightness(1.04); }
+    .btn-sm { padding: 0.45rem 0.9rem; font-size: 0.875rem; }
+    .btn-danger { background: #dc3545; border-color: rgba(0,0,0,0.06); color: #fff; border-radius: 6px; }
+    .btn-danger:hover { filter: brightness(0.95); }
+    .btn-secondary { background: #6c757d; border-color: rgba(0,0,0,0.06); color: #fff; border-radius: 6px; }
+    .btn-secondary:hover { filter: brightness(0.95); }
+    .btn-success { background: #28a745; border-color: rgba(0,0,0,0.06); color: #fff; border-radius: 6px; }
+    .btn-success:hover { filter: brightness(0.98); }
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
     th { background: #f8f9fa; font-weight: 600; color: #333; }
     .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
     .actions form { display: inline; }
-    .edit-form { display: none; background: #f8f9fa; padding: 1rem; border-radius: 5px; margin-top: 0.5rem; }
+    .edit-form { display: none; background: #ffffff; padding: 1rem; border-radius: 0; margin-top: 0.5rem; border-top: 4px solid rgba(0,0,0,0.03); }
     .edit-form.active { display: block; }
     @media (max-width: 768px) {
       .container { padding: 1rem; }
       table, thead, tbody, th, td, tr { display: block; }
       thead { display: none; }
-      tr { margin-bottom: 1rem; background: #f8f9fa; border-radius: 8px; padding: 1rem; }
+      tr { margin-bottom: 1rem; background: #ffffff; border-radius: 0; padding: 1rem; border-top: 4px solid rgba(0,0,0,0.03); }
       td { padding: 0.5rem 0; border: none; }
       td:before { content: attr(data-label); font-weight: 600; display: block; margin-bottom: 0.25rem; }
     }
@@ -42,8 +47,8 @@
 </head>
 <body>
   <%- include('partials/header') %>
-  
-  <div class="container">
+  <main class="main">
+    <div class="container">
     <h1>Dashboard</h1>
     <p class="subtitle">Správa kurzů</p>
     
@@ -85,11 +90,11 @@
                 <td><%= course.name %></td>
                 <td><%= course.short_description || '-' %></td>
                 <td class="actions">
-                  <a href="/courses/<%= course.uuid %>" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Zobrazit</a>
-                  <a href="/dashboard/courses/<%= course.uuid %>" class="btn" style="padding: 0.5rem 1rem; font-size: 0.875rem; background: #28a745;">Materiály</a>
-                  <button type="button" class="btn" style="padding: 0.5rem 1rem; font-size: 0.875rem;" onclick="toggleEdit('<%= course.uuid %>')">Upravit</button>
+                  <a href="/courses/<%= course.uuid %>" class="btn btn-secondary btn-sm">Zobrazit</a>
+                  <a href="/dashboard/courses/<%= course.uuid %>" class="btn btn-success btn-sm">Materiály</a>
+                  <button type="button" class="btn btn-sm" onclick="toggleEdit('<%= course.uuid %>')">Upravit</button>
                   <form method="POST" action="/dashboard/courses/<%= course.uuid %>/delete" onsubmit="return confirm('Opravdu chcete smazat tento kurz?');">
-                    <button type="submit" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Smazat</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Smazat</button>
                   </form>
                 </td>
               </tr>
@@ -111,8 +116,8 @@
                         <label>Popis</label>
                         <textarea name="description"><%= course.description || '' %></textarea>
                       </div>
-                      <button type="submit" class="btn">Uložit změny</button>
-                      <button type="button" class="btn btn-secondary" onclick="toggleEdit('<%= course.uuid %>')">Zrušit</button>
+                      <button type="submit" class="btn btn-sm">Uložit změny</button>
+                      <button type="button" class="btn btn-secondary btn-sm" onclick="toggleEdit('<%= course.uuid %>')">Zrušit</button>
                     </form>
                   </div>
                 </td>
@@ -124,8 +129,9 @@
         <p>Zatím nejsou žádné kurzy. Přidejte první kurz výše.</p>
       <% } %>
     </div>
-  </div>
-  
+    </div>
+  </main>
+
   <script>
     function toggleEdit(uuid) {
       const form = document.getElementById('edit-' + uuid);
@@ -143,5 +149,7 @@
     burger.addEventListener('click', toggleMenu);
     overlay.addEventListener('click', toggleMenu);
   </script>
+
+  <%- include('partials/footer') %>
 </body>
 </html>

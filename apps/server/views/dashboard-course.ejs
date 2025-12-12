@@ -11,23 +11,23 @@
     .subtitle { color: #666; margin-bottom: 2rem; }
     .back-link { display: inline-block; margin-bottom: 1.5rem; color: #667eea; text-decoration: none; }
     .back-link:hover { text-decoration: underline; }
-    .card { background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 2rem; }
-    .card h2 { color: #333; margin-bottom: 1rem; font-size: 1.3rem; border-bottom: 2px solid #667eea; padding-bottom: 0.5rem; }
+    .card { background: white; border-radius: 0; padding: 1.5rem; box-shadow: none; margin-bottom: 2rem; border-top: 6px solid var(--brand-primary); }
+    .card h2 { color: #333; margin-bottom: 1rem; font-size: 1.3rem; border-bottom: 2px solid var(--brand-primary); padding-bottom: 0.5rem; }
     .form-row { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
     .form-group { flex: 1; min-width: 200px; }
     .form-group label { display: block; margin-bottom: 0.5rem; color: #555; font-weight: 500; }
-    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 5px; font-size: 1rem; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.75rem; border: 1px solid rgba(0,0,0,0.06); border-radius: 0; font-size: 1rem; background: #fff; }
     .form-group textarea { resize: vertical; min-height: 80px; }
-    .btn { padding: 0.75rem 1.5rem; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: 500; }
-    .btn:hover { background: #5a6fd6; }
-    .btn-danger { background: #dc3545; }
-    .btn-danger:hover { background: #c82333; }
-    .btn-secondary { background: #6c757d; }
-    .btn-secondary:hover { background: #5a6268; }
+    .btn { padding: 0.75rem 1.5rem; background: var(--brand-primary); color: white; border: 2px solid rgba(0,0,0,0.06); border-radius: 0; cursor: pointer; font-size: 1rem; font-weight: 700; }
+    .btn:hover { filter: brightness(0.98); }
+    .btn-danger { background: #dc3545; border-color: rgba(0,0,0,0.06); border-radius: 0; }
+    .btn-danger:hover { filter: brightness(0.96); }
+    .btn-secondary { background: #6c757d; border-color: rgba(0,0,0,0.06); border-radius: 0; }
+    .btn-secondary:hover { filter: brightness(0.96); }
     .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.875rem; }
     .materials-list { list-style: none; }
-    .material-item { display: flex; align-items: center; padding: 1rem; background: #f8f9fa; border-radius: 8px; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem; }
-    .material-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #667eea; color: white; border-radius: 8px; font-size: 1.2rem; flex-shrink: 0; }
+    .material-item { display: flex; align-items: center; padding: 1rem; background: #fff; border-radius: 0; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem; border: 1px solid rgba(0,0,0,0.06); }
+    .material-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: var(--brand-primary); color: white; border-radius: 0; font-size: 1.2rem; flex-shrink: 0; }
     .material-icon.link { background: #28a745; }
     .material-info { flex: 1; min-width: 200px; }
     .material-name { font-weight: 600; color: #333; margin-bottom: 0.25rem; }
@@ -36,26 +36,26 @@
     .material-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
     .material-actions form { display: inline; }
     .type-selector { display: flex; gap: 1rem; margin-bottom: 1rem; }
-    .type-selector label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.75rem 1rem; border: 2px solid #ddd; border-radius: 5px; }
+    .type-selector label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.75rem 1rem; border: 2px solid rgba(0,0,0,0.06); border-radius: 0; }
     .type-selector input:checked + span { color: #667eea; }
     .type-selector label:has(input:checked) { border-color: #667eea; background: #f0f3ff; }
     .file-fields, .link-fields { display: none; }
     .file-fields.active, .link-fields.active { display: block; }
-    .edit-form { display: none; background: #fff; padding: 1rem; border: 1px solid #ddd; border-radius: 5px; margin-top: 0.5rem; width: 100%; }
+    .edit-form { display: none; background: #fff; padding: 1rem; border: 1px solid rgba(0,0,0,0.06); border-radius: 0; margin-top: 0.5rem; width: 100%; }
     .edit-form.active { display: block; }
     .empty { color: #888; font-style: italic; padding: 1rem; text-align: center; }
     .alert { padding: 1rem; border-radius: 5px; margin-bottom: 1rem; }
     .alert-info { background: #e7f3ff; color: #0056b3; }
     .quiz-list { list-style: none; }
-    .quiz-item { padding: 1rem; background: #f8f9fa; border-radius: 8px; margin-bottom: 0.75rem; }
+    .quiz-item { padding: 1rem; background: #fff; border-radius: 0; margin-bottom: 0.75rem; border: 1px solid rgba(0,0,0,0.06); }
     .quiz-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
-    .quiz-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #ffc107; color: white; border-radius: 8px; font-size: 1.2rem; flex-shrink: 0; }
+    .quiz-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #ffc107; color: white; border-radius: 0; font-size: 1.2rem; flex-shrink: 0; }
     .quiz-info { flex: 1; min-width: 200px; }
     .quiz-name { font-weight: 600; color: #333; }
     .quiz-desc { font-size: 0.9rem; color: #666; }
     .quiz-meta { font-size: 0.8rem; color: #888; margin-top: 0.25rem; }
     .quiz-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-    .question-item { background: #fff; padding: 1rem; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 0.5rem; }
+    .question-item { background: #fff; padding: 1rem; border: 1px solid rgba(0,0,0,0.06); border-radius: 0; margin-bottom: 0.5rem; }
     .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
     .answer-item { padding: 0.25rem 0.5rem; margin: 0.25rem 0; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; }
     .answer-item.correct { color: #28a745; font-weight: 500; }
@@ -63,7 +63,7 @@
     .btn-warning:hover { background: #e0a800; }
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; }
     .modal.active { display: flex; justify-content: center; align-items: flex-start; padding: 2rem; }
-    .modal-content { background: white; border-radius: 10px; padding: 2rem; max-width: 800px; width: 100%; margin: 2rem 0; }
+    .modal-content { background: white; border-radius: 0; padding: 2rem; max-width: 800px; width: 100%; margin: 2rem 0; border-top: 6px solid var(--brand-primary); }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
     .modal-header h2 { font-size: 1.5rem; color: #333; }
     .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #888; }
@@ -78,8 +78,8 @@
 </head>
 <body>
   <%- include('partials/header') %>
-  
-  <div class="container">
+  <main class="main">
+    <div class="container">
     <a href="/dashboard" class="back-link">← Zpět na dashboard</a>
     
     <h1><%= course.name %></h1>
@@ -209,8 +209,9 @@
         <div id="quizzesList" class="quiz-list"></div>
       </div>
     </div>
-  </div>
-  
+    </div>
+  </main>
+
   <!-- Quiz Modal -->
   <div id="quizModal" class="modal">
     <div class="modal-content">
@@ -574,5 +575,7 @@
     burger.addEventListener('click', toggleMenu);
     overlay.addEventListener('click', toggleMenu);
   </script>
+
+  <%- include('partials/footer') %>
 </body>
 </html>

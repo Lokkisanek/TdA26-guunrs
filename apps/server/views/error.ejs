@@ -6,7 +6,8 @@
   <title>Chyba - Think different Academy</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; min-height: 100vh; display: flex; flex-direction: column; }
+    .main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem 0; }
     .error-container { text-align: center; padding: 2rem; }
     .error-container h1 { color: #dc3545; font-size: 3rem; margin-bottom: 1rem; }
     .error-container p { color: #666; font-size: 1.2rem; margin-bottom: 2rem; }
@@ -15,10 +16,14 @@
   </style>
 </head>
 <body>
-  <div class="error-container">
-    <h1>Chyba</h1>
-    <p><%= message %></p>
-    <a href="/">Zpět na hlavní stránku</a>
-  </div>
+  <main class="main">
+    <div class="error-container">
+      <h1>Chyba</h1>
+      <p><%= message %></p>
+      <a href="/">Zpět na hlavní stránku</a>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
 </body>
 </html>

@@ -40,7 +40,10 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Dosis', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; min-height: 100vh; color: var(--text-dark); }
+body { font-family: 'Dosis', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; min-height: 100vh; color: var(--text-dark); display: flex; flex-direction: column; }
+
+/* Main content wrapper that grows to push footer to the bottom */
+.main { flex: 1; }
 
 /* Navbar */
 .navbar {

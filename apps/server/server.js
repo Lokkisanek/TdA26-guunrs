@@ -871,6 +871,16 @@ app.get('/', (req, res) => {
   res.render('home', { user: req.session.user });
 });
 
+// GET /privacy-policy - Privacy Policy page
+app.get('/privacy-policy', (req, res) => {
+  res.render('privacy-policy', { user: req.session.user });
+});
+
+// GET /terms - Terms and Conditions page
+app.get('/terms', (req, res) => {
+  res.render('terms', { user: req.session.user });
+});
+
 // GET /courses - List all courses
 app.get('/courses', (req, res) => {
   const search = req.query.search || '';
