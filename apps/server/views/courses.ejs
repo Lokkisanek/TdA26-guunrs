@@ -15,15 +15,13 @@
     .search-form button { padding: 0.6rem 1rem; background: var(--brand-primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem; align-self: center; border: 2px solid rgba(255,255,255,0.06); }
     .search-form button:hover { filter: brightness(1.04); }
     .courses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
-    /* Flat cards to match homepage aesthetic */
-    .course-card { background: #ffffff; border-radius: 0; padding: 1.5rem; box-shadow: none; transition: transform 0.12s ease; border-top: 6px solid var(--brand-primary); }
-    .course-card:hover { transform: translateY(-4px); }
+    /* Flat cards to match homepage aesthetic - entire card is clickable */
+    .course-card { background: #ffffff; border-radius: 0; padding: 1.5rem; box-shadow: none; transition: transform 0.12s ease, box-shadow 0.12s ease; border-top: 6px solid var(--brand-primary); cursor: pointer; text-decoration: none; display: block; color: inherit; }
+    .course-card:hover { transform: translateY(-4px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
     .course-card h2 { color: #333; margin-bottom: 0.75rem; font-size: 1.3rem; }
     .course-card p { color: #666; margin-bottom: 1rem; line-height: 1.5; }
-    /* Flat rectangular CTA for cards (not pill) */
-    .course-card a { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.9rem; text-decoration: none; font-weight: 700; font-size: 0.95rem; border-radius: 6px; background: var(--brand-primary); color: #fff; border: 2px solid rgba(255,255,255,0.14); }
-    .course-card a svg { width: 14px; height: 14px; }
-    .course-card a:hover { filter: brightness(1.04); }
+    /* Flat rectangular CTA for cards (not pill) - visual only, card handles click */
+    .course-card .card-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.9rem; text-decoration: none; font-weight: 700; font-size: 0.95rem; border-radius: 6px; background: var(--brand-primary); color: #fff; border: 2px solid rgba(255,255,255,0.14); pointer-events: none; }
     .no-courses { text-align: center; padding: 3rem; color: #666; }
     @media (max-width: 768px) {
       .container { padding: 1rem; }
@@ -38,29 +36,76 @@
     <div class="container">
     <h1>Dostupné kurzy</h1>
     
-    <form class="search-form" method="GET" action="/courses">
-      <input type="text" name="search" placeholder="Hledat kurz..." value="<%= search %>">
+    <form class="search-form" method="GET" action="/courses" id="searchForm">
+      <input type="text" name="search" id="searchInput" placeholder="Hledat kurz..." value="<%= search %>" autocomplete="off">
       <button type="submit">Hledat</button>
     </form>
     
-    <% if (courses.length > 0) { %>
-      <div class="courses-grid">
+    <div class="courses-grid" id="coursesGrid">
+      <% if (courses.length > 0) { %>
         <% courses.forEach(course => { %>
-          <div class="course-card">
+          <a href="/courses/<%= course.uuid %>" class="course-card" data-name="<%= course.name.toLowerCase() %>" data-desc="<%= (course.short_description || course.description || '').toLowerCase() %>">
             <h2><%= course.name %></h2>
             <p><%= course.short_description || course.description || 'Bez popisu' %></p>
-            <a href="/courses/<%= course.uuid %>">Zobrazit detail</a>
-          </div>
+            <span class="card-btn">Zobrazit detail</span>
+          </a>
         <% }) %>
-      </div>
-    <% } else { %>
-      <div class="no-courses">
-        <p>Žádné kurzy nenalezeny.</p>
-      </div>
-    <% } %>
+      <% } else { %>
+        <div class="no-courses">
+          <p>Žádné kurzy nenalezeny.</p>
+        </div>
+      <% } %>
+    </div>
     </div>
   </main>
 
   <%- include('partials/footer') %>
+
+  <script>
+    (function() {
+      const searchInput = document.getElementById('searchInput');
+      const coursesGrid = document.getElementById('coursesGrid');
+      const cards = Array.from(coursesGrid.querySelectorAll('.course-card'));
+      
+      // Live filtering as user types
+      searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+        
+        if (!query) {
+          // Show all cards when search is empty
+          cards.forEach(card => card.style.display = '');
+          return;
+        }
+        
+        let anyVisible = false;
+        cards.forEach(card => {
+          const name = card.dataset.name || '';
+          const desc = card.dataset.desc || '';
+          const matches = name.includes(query) || desc.includes(query);
+          card.style.display = matches ? '' : 'none';
+          if (matches) anyVisible = true;
+        });
+        
+        // Show "no courses" message if none match
+        const noCoursesDiv = coursesGrid.querySelector('.no-courses');
+        if (!anyVisible && cards.length > 0) {
+          if (!noCoursesDiv) {
+            const div = document.createElement('div');
+            div.className = 'no-courses live-search-empty';
+            div.innerHTML = '<p>Žádné kurzy nenalezeny.</p>';
+            coursesGrid.appendChild(div);
+          }
+        } else {
+          const liveEmpty = coursesGrid.querySelector('.live-search-empty');
+          if (liveEmpty) liveEmpty.remove();
+        }
+      });
+
+      // Trigger initial filter if there's a search value
+      if (searchInput.value) {
+        searchInput.dispatchEvent(new Event('input'));
+      }
+    })();
+  </script>
 </body>
 </html>

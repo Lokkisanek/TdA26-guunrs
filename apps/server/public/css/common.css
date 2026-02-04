@@ -42,6 +42,49 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'Dosis', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; min-height: 100vh; color: var(--text-dark); display: flex; flex-direction: column; }
 
+/* ========== INTERACTIVE ELEMENT DEFAULTS (UX) ========== */
+/* Ensure all interactive elements have pointer cursor and proper hover feedback */
+a, button, [role="button"], input[type="submit"], input[type="button"], .clickable {
+  cursor: pointer;
+}
+
+/* Remove pointer cursor from disabled elements */
+a[disabled], button[disabled], [aria-disabled="true"], .disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Ensure non-interactive text elements don't have pointer cursor */
+p, h1, h2, h3, h4, h5, h6, span:not(.clickable), div:not(.clickable):not([role="button"]), label:not([for]) {
+  cursor: default;
+}
+
+/* Links should have clear hover feedback */
+a {
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+a:hover {
+  opacity: 0.9;
+}
+
+/* Buttons should have subtle scale feedback */
+button:not([disabled]):hover, 
+input[type="submit"]:not([disabled]):hover,
+input[type="button"]:not([disabled]):hover,
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+button:not([disabled]):active,
+input[type="submit"]:not([disabled]):active,
+input[type="button"]:not([disabled]):active,
+.btn:active {
+  transform: translateY(0);
+}
+
+/* ========== END INTERACTIVE ELEMENT DEFAULTS ========== */
+
 /* Main content wrapper that grows to push footer to the bottom */
 .main { flex: 1; }
 

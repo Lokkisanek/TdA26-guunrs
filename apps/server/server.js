@@ -903,7 +903,12 @@ app.get('/courses/:uuid', (req, res) => {
     return res.status(404).render('error', { message: 'Kurz nenalezen', user: req.session.user });
   }
   
-  const materials = db.prepare('SELECT * FROM materials WHERE course_uuid = ? ORDER BY created_at DESC').all(req.params.uuid);
+  const rawMaterials = db.prepare('SELECT * FROM materials WHERE course_uuid = ? ORDER BY created_at DESC').all(req.params.uuid);
+  // Add fileUrl to materials for template rendering
+  const materials = rawMaterials.map(m => ({
+    ...m,
+    fileUrl: m.type === 'file' && m.file_path ? `/uploads/${path.basename(m.file_path)}` : null
+  }));
   const quizzes = db.prepare('SELECT * FROM quizzes WHERE course_uuid = ? ORDER BY created_at DESC').all(req.params.uuid);
   
   // Add completion count to each quiz
@@ -984,7 +989,12 @@ app.get('/dashboard/courses/:uuid', requireAuth, (req, res) => {
     return res.redirect('/dashboard');
   }
   
-  const materials = db.prepare('SELECT * FROM materials WHERE course_uuid = ? ORDER BY created_at DESC').all(req.params.uuid);
+  const rawMaterials = db.prepare('SELECT * FROM materials WHERE course_uuid = ? ORDER BY created_at DESC').all(req.params.uuid);
+  // Add fileUrl to materials for template rendering
+  const materials = rawMaterials.map(m => ({
+    ...m,
+    fileUrl: m.type === 'file' && m.file_path ? `/uploads/${path.basename(m.file_path)}` : null
+  }));
   const quizzes = db.prepare('SELECT * FROM quizzes WHERE course_uuid = ? ORDER BY created_at DESC').all(req.params.uuid);
   res.render('dashboard-course', { course, materials, quizzes, user: req.session.user });
 });

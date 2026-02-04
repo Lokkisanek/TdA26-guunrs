@@ -129,7 +129,7 @@
                   <% } %>
                 </div>
                 <% if (material.type === 'file') { %>
-                  <a href="/uploads/<%= require('path').basename(material.file_path) %>" class="material-action" download>Stáhnout</a>
+                  <a href="<%= material.fileUrl %>" class="material-action" download>Stáhnout</a>
                 <% } else { %>
                   <a href="<%= material.url %>" class="material-action link" target="_blank" rel="noopener">Otevřít</a>
                 <% } %>
