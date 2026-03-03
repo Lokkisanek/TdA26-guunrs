@@ -1,101 +1,140 @@
-<%- include('partials/header', { title }) %>
-<section>
-  <% if (!course) { %>
-    <p>Kurz nebyl nalezen.</p>
-    <a href="/courses" class="btn secondary">Zpět na kurzy</a>
-  <% } else { %>
+<%- include('partials/header', { title: course ? course.title : 'Kurz nenalezen' }) %>
+
+<% if (!course) { %>
+<div class="container-sm" style="text-align:center; padding-top:4rem;">
+  <h1 style="color:var(--brand-blue-dark); margin-bottom:1rem;">Kurz nenalezen</h1>
+  <p style="color:#555; margin-bottom:2rem;">Požadovaný kurz neexistuje nebo byl odstraněn.</p>
+  <a href="/courses" class="btn">Zpět na seznam kurzů</a>
+</div>
+<% } else { %>
+<div class="container-sm">
+  <a href="/courses" class="back-link">← Zpět na seznam kurzů</a>
+
+  <div class="course-detail">
     <h1><%= course.title %></h1>
-    <p class="lead"><%= course.shortDescription %></p>
-    <div class="course-body">
-      <p><%= course.description || 'Bez popisu' %></p>
+    <p class="course-meta">ID: <%= course.id %></p>
+
+    <div class="course-description">
+      <%= course.description || course.shortDescription || 'Tento kurz zatím nemá popis.' %>
     </div>
-    <section class="feed">
+
+    <!-- Lessons -->
+    <% if (course.lessons && course.lessons.length > 0) { %>
+    <div class="section lessons-section">
+      <h2>Lekce</h2>
+      <% course.lessons.forEach(function(lesson) { %>
+        <div class="lesson-card">
+          <h3><%= lesson.title %></h3>
+          <% if (lesson.description) { %>
+            <p><%= lesson.description %></p>
+          <% } %>
+          <div class="lesson-meta">
+            <span class="pages-count"><%= lesson.pages ? lesson.pages.length : 0 %> stránek</span>
+            <% if (lesson.liveSessions && lesson.liveSessions.length > 0) { %>
+              <% var liveSession = lesson.liveSessions[0]; %>
+              <% if (liveSession.currentState === 'LIVE') { %>
+                <a href="/classroom/student/<%= liveSession.id %>" class="join-btn">🔴 Připojit se živě</a>
+              <% } else if (liveSession.currentState === 'SCHEDULED') { %>
+                <span style="color:#ffc107; font-weight:600;">📅 Naplánováno</span>
+              <% } %>
+            <% } %>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+    <% } %>
+
+    <!-- Feed section -->
+    <div class="feed-section section">
       <h2>Informační kanál</h2>
       <% if (user) { %>
-        <form id="feed-form">
-          <textarea id="feed-text" rows="3" placeholder="Napište zprávu..." required></textarea>
-          <button type="submit" class="btn">Odeslat</button>
-        </form>
+        <div class="feed-form">
+          <textarea id="feed-text" placeholder="Napište zprávu pro účastníky kurzu..."></textarea>
+          <button id="feed-submit">Odeslat příspěvek</button>
+        </div>
       <% } %>
-      <div id="feed-list">
-        <p>Načítám...</p>
-      </div>
-    </section>
-    <a href="/courses" class="btn secondary">Zpět na kurzy</a>
-  <% } %>
-</section>
-<%- include('partials/footer') %>
+      <ul class="feed-list" id="feed-list">
+        <li style="color:#888;font-style:italic;">Načítám kanál...</li>
+      </ul>
+    </div>
+  </div>
+</div>
 
 <script>
-  (function () {
-    const courseId = "<%= course.id %>";
-    const feedList = document.getElementById('feed-list');
-    const isUser = <%= user ? 'true' : 'false' %>;
+  var courseId = '<%= course.id %>';
+  var isUser = <%= user ? 'true' : 'false' %>;
+  var feedList = document.getElementById('feed-list');
 
-    function render(entries) {
-      if (!entries || entries.length === 0) {
-        feedList.innerHTML = '<p>Žádné příspěvky.</p>';
-        return;
-      }
-      feedList.innerHTML = entries.map(e => {
-        const time = new Date(e.createdAt).toLocaleString();
-        const edited = e.editedAt ? ' <em>(upraveno)</em>' : '';
-        return `<div class="feed-entry" data-id="${e.id}"><div class="meta"><strong>${e.type}</strong> — <span class="time">${time}</span>${edited}</div><div class="content">${(e.content||'')}</div>${isUser ? `<div class="actions"><button class="edit">Upravit</button><button class="del">Smazat</button></div>` : ''}</div>`;
-      }).join('');
+  function formatTime(iso) { return new Date(iso).toLocaleString('cs-CZ'); }
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
 
-      // attach actions
-      feedList.querySelectorAll('.del').forEach(btn => {
-        btn.addEventListener('click', (ev) => {
-          const entryEl = ev.target.closest('.feed-entry');
-          const id = entryEl.dataset.id;
-          fetch(`/api/courses/${courseId}/feed/${id}`, { method: 'DELETE', credentials: 'same-origin' }).then(r => {
-            if (!r.ok) alert('Chyba při mazání');
-          });
-        });
-      });
-
-      feedList.querySelectorAll('.edit').forEach(btn => {
-        btn.addEventListener('click', (ev) => {
-          const entryEl = ev.target.closest('.feed-entry');
-          const id = entryEl.dataset.id;
-          const current = entryEl.querySelector('.content').textContent;
-          const text = prompt('Upravit příspěvek', current);
-          if (text === null) return;
-          fetch(`/api/courses/${courseId}/feed/${id}`, { method: 'PATCH', credentials: 'same-origin', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ text }) }).then(r=>{ if(!r.ok) alert('Chyba při úpravě'); });
-        });
-      });
+  function renderFeed(entries) {
+    if (!entries || entries.length === 0) {
+      feedList.innerHTML = '<li style="color:#888;font-style:italic;">Zatím žádné příspěvky.</li>';
+      return;
     }
+    feedList.innerHTML = entries.map(function(e) {
+      var badgeClass = e.type === 'TEACHER' ? '' : 'autogen';
+      var entryClass = e.type === 'TEACHER' ? 'teacher' : 'autogen';
+      var badgeText = e.type === 'TEACHER' ? 'Lektor' : 'Systém';
+      var edited = e.editedAt ? '<span class="edited">(upraveno ' + formatTime(e.editedAt) + ')</span>' : '';
+      var actions = isUser ? '<div class="actions"><button onclick="editEntry(\'' + e.id + '\')">Upravit</button><button class="del" onclick="deleteEntry(\'' + e.id + '\')">Smazat</button></div>' : '';
+      return '<li class="feed-entry ' + entryClass + '" data-id="' + e.id + '"><div class="meta"><span class="badge ' + badgeClass + '">' + badgeText + '</span><span>' + formatTime(e.createdAt) + '</span>' + edited + '</div><div class="content">' + escapeHtml(e.content) + '</div>' + actions + '</li>';
+    }).join('');
+  }
 
-    // initial load
-    fetch(`/api/courses/${courseId}/feed`).then(r=>r.json()).then(render).catch(()=>{ feedList.innerHTML = '<p>Chyba při načítání kanálu.</p>'; });
+  // Initial fetch
+  fetch('/api/courses/' + courseId + '/feed').then(function(r) { return r.json(); }).then(renderFeed).catch(function() {
+    feedList.innerHTML = '<li style="color:#dc3545;">Chyba při načítání kanálu.</li>';
+  });
 
-    // SSE
-    const es = new EventSource(`/api/courses/${courseId}/feed/stream`);
-    es.addEventListener('init', (ev) => {
-      const entries = JSON.parse(ev.data);
-      render(entries);
+  // SSE
+  var evtSource = new EventSource('/api/courses/' + courseId + '/feed/stream');
+  evtSource.addEventListener('init', function(e) { renderFeed(JSON.parse(e.data)); });
+  ['new_entry','updated_entry','deleted_entry'].forEach(function(evt) {
+    evtSource.addEventListener(evt, function() {
+      fetch('/api/courses/' + courseId + '/feed').then(function(r) { return r.json(); }).then(renderFeed);
     });
-    es.addEventListener('new_entry', (ev) => {
-      const entry = JSON.parse(ev.data);
-      // prepend
-      const current = Array.from(feedList.querySelectorAll('.feed-entry')).map(el=>({ id: el.dataset.id }));
-      fetch(`/api/courses/${courseId}/feed`).then(r=>r.json()).then(render);
-    });
-    es.addEventListener('updated_entry', (ev) => { fetch(`/api/courses/${courseId}/feed`).then(r=>r.json()).then(render); });
-    es.addEventListener('deleted_entry', (ev) => { fetch(`/api/courses/${courseId}/feed`).then(r=>r.json()).then(render); });
+  });
 
-    // form submit
-    const form = document.getElementById('feed-form');
-    if (form) {
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const text = document.getElementById('feed-text').value.trim();
-        if (!text) return;
-        fetch(`/api/courses/${courseId}/feed`, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) })
-          .then(r => { if (!r.ok) throw new Error('error'); return r.json(); })
-          .then(() => { document.getElementById('feed-text').value = ''; })
-          .catch(() => alert('Nepodařilo se odeslat příspěvek'));
-      });
-    }
-  })();
+  // Submit
+  var feedSubmitBtn = document.getElementById('feed-submit');
+  if (feedSubmitBtn) {
+    feedSubmitBtn.addEventListener('click', function() {
+      var textarea = document.getElementById('feed-text');
+      var text = textarea.value.trim();
+      if (!text) return;
+      fetch('/api/courses/' + courseId + '/feed', {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text })
+      }).then(function(r) { if (!r.ok) throw new Error(); textarea.value = ''; }).catch(function() { alert('Nepodařilo se odeslat příspěvek'); });
+    });
+  }
+
+  function editEntry(id) {
+    var entryEl = feedList.querySelector('[data-id="' + id + '"]');
+    if (!entryEl) return;
+    var current = entryEl.querySelector('.content').textContent;
+    var newText = prompt('Upravit příspěvek', current);
+    if (newText === null) return;
+    fetch('/api/courses/' + courseId + '/feed/' + id, {
+      method: 'PATCH', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: newText })
+    }).then(function(r) { if (!r.ok) alert('Chyba při úpravě'); });
+  }
+
+  function deleteEntry(id) {
+    if (!confirm('Opravdu smazat příspěvek?')) return;
+    fetch('/api/courses/' + courseId + '/feed/' + id, {
+      method: 'DELETE', credentials: 'same-origin'
+    }).then(function(r) { if (!r.ok) alert('Chyba při mazání'); });
+  }
 </script>
+<% } %>
+
+<%- include('partials/footer') %>

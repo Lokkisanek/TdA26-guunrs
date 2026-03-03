@@ -1,52 +1,135 @@
-<%- include('partials/header', { title }) %>
-<section class="dashboard">
-  <h1>Dashboard</h1>
-  <div class="grid">
-    <div>
-      <h2>Přidat kurz</h2>
-      <form method="post" action="/dashboard" class="form">
-        <label>Název<input name="title" required /></label>
-        <label>Krátký popis<input name="shortDescription" required /></label>
-        <label>Popis<textarea name="description" rows="4"></textarea></label>
-        <button type="submit">Vytvořit</button>
-      </form>
-    </div>
-    <div>
-      <h2>Kurzy</h2>
-      <% if (!courses.length) { %>
-        <p>Zatím žádné kurzy.</p>
-      <% } else { %>
-        <table>
-          <thead>
-            <tr>
-              <th>Název</th>
-              <th>Akce</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% courses.forEach(course => { %>
-              <tr>
-                <td>
-                  <strong><%= course.title %></strong><br />
-                  <small><%= course.shortDescription %></small>
-                </td>
-                <td class="actions">
-                  <form method="post" action="/dashboard/<%= course.id %>?_method=PUT" class="form inline">
-                    <input name="title" value="<%= course.title %>" />
-                    <input name="shortDescription" value="<%= course.shortDescription %>" />
-                    <input name="description" value="<%= course.description || '' %>" />
-                    <button type="submit">Upravit</button>
-                  </form>
-                  <form method="post" action="/dashboard/<%= course.id %>?_method=DELETE" class="inline">
-                    <button type="submit" class="danger">Smazat</button>
-                  </form>
-                </td>
-              </tr>
-            <% }) %>
-          </tbody>
-        </table>
-      <% } %>
-    </div>
+<%- include('partials/header', { title: 'Dashboard' }) %>
+
+<div class="container">
+  <h1 style="color:var(--brand-blue-dark); margin-bottom:0.5rem;">Dashboard</h1>
+  <p class="subtitle">Správa kurzů a lekcí</p>
+
+  <!-- Add course -->
+  <div class="card">
+    <h2>Přidat nový kurz</h2>
+    <form method="POST" action="/dashboard">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="title">Název kurzu *</label>
+          <input type="text" id="title" name="title" required>
+        </div>
+        <div class="form-group">
+          <label for="shortDescription">Krátký popis *</label>
+          <input type="text" id="shortDescription" name="shortDescription" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="description">Popis</label>
+        <textarea id="description" name="description"></textarea>
+      </div>
+      <button type="submit" class="btn">Přidat kurz</button>
+    </form>
   </div>
-</section>
+
+  <!-- Courses list -->
+  <div class="card">
+    <h2>Seznam kurzů</h2>
+    <% if (courses.length > 0) { %>
+      <table>
+        <thead>
+          <tr>
+            <th>Název</th>
+            <th>Krátký popis</th>
+            <th>Akce</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% courses.forEach(function(course) { %>
+            <tr>
+              <td data-label="Název"><%= course.title %></td>
+              <td data-label="Popis"><%= course.shortDescription || '-' %></td>
+              <td data-label="Akce" class="actions">
+                <a href="/courses/<%= course.id %>" class="btn btn-secondary btn-sm">Zobrazit</a>
+                <button type="button" class="btn btn-sm" onclick="toggleEdit('<%= course.id %>')">Upravit</button>
+                <form method="POST" action="/dashboard/<%= course.id %>?_method=DELETE" onsubmit="return confirm('Opravdu chcete smazat tento kurz?');">
+                  <button type="submit" class="btn btn-danger btn-sm">Smazat</button>
+                </form>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="3" style="padding:0; border:none;">
+                <div id="edit-<%= course.id %>" class="edit-form">
+                  <form method="POST" action="/dashboard/<%= course.id %>?_method=PUT">
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label>Název kurzu</label>
+                        <input type="text" name="title" value="<%= course.title %>" required>
+                      </div>
+                      <div class="form-group">
+                        <label>Krátký popis</label>
+                        <input type="text" name="shortDescription" value="<%= course.shortDescription || '' %>">
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label>Popis</label>
+                      <textarea name="description"><%= course.description || '' %></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-sm">Uložit změny</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleEdit('<%= course.id %>')">Zrušit</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Lessons for this course -->
+            <tr>
+              <td colspan="3" style="padding:0.5rem 0; border:none;">
+                <div class="lessons-section" style="margin-top:0; padding-top:0.5rem; border-top:none;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem;">
+                    <strong style="color:var(--brand-blue-dark);">Lekce kurzu</strong>
+                    <form method="POST" action="/dashboard/courses/<%= course.id %>/lessons" style="display:inline-flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                      <input type="text" name="title" placeholder="Název lekce" style="padding:0.35rem 0.6rem;border:1px solid rgba(0,0,0,0.06);font-size:0.9rem;font-family:inherit;">
+                      <button type="submit" class="btn btn-success btn-sm">+ Lekce</button>
+                    </form>
+                  </div>
+                  <% if (course.lessons && course.lessons.length > 0) { %>
+                    <% course.lessons.forEach(function(lesson) { %>
+                      <div class="lesson-card">
+                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+                          <div>
+                            <h3 style="margin:0;"><%= lesson.title %></h3>
+                            <div class="lesson-meta" style="margin-top:0.25rem;">
+                              <span class="pages-count"><%= lesson._count ? lesson._count.pages : 0 %> stránek</span>
+                              <span><%= lesson._count ? lesson._count.liveSessions : 0 %> relací</span>
+                            </div>
+                          </div>
+                          <div class="actions">
+                            <a href="/dashboard/lessons/<%= lesson.id %>" class="btn btn-sm">Spravovat</a>
+                            <form method="POST" action="/dashboard/lessons/<%= lesson.id %>/duplicate" style="display:inline;">
+                              <button type="submit" class="btn btn-secondary btn-sm">Duplikovat</button>
+                            </form>
+                            <form method="POST" action="/dashboard/lessons/<%= lesson.id %>/delete" onsubmit="return confirm('Smazat lekci?');" style="display:inline;">
+                              <button type="submit" class="btn btn-danger btn-sm">Smazat</button>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+                    <% }) %>
+                  <% } else { %>
+                    <p style="color:#888;font-style:italic;font-size:0.9rem;">Žádné lekce. Přidejte první výše.</p>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <p>Zatím nejsou žádné kurzy. Přidejte první kurz výše.</p>
+    <% } %>
+  </div>
+</div>
+
+<script>
+  function toggleEdit(id) {
+    var form = document.getElementById('edit-' + id);
+    if (form) form.classList.toggle('active');
+  }
+</script>
+
 <%- include('partials/footer') %>

@@ -1,0 +1,236 @@
+<%- include('partials/header', { title }) %>
+<style>
+  .lesson-header h1 { color: var(--brand-blue-dark); font-size: 1.8rem; margin-bottom: 0.25rem; }
+  .lesson-header .meta { color: #888; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .teacher-layout { display: grid; grid-template-columns: 280px 1fr 300px; gap: 1.5rem; align-items: start; }
+  .panel { background: #fff; border-top: 6px solid var(--brand-primary); padding: 1.25rem; margin-bottom: 1rem; }
+  .panel h2 { font-size: 1.15rem; color: var(--brand-blue-dark); margin-bottom: 1rem; }
+  .state-controls { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+  .state-btn { padding: 0.6rem 1rem; border: 2px solid rgba(0,0,0,0.06); border-radius: 6px; font-weight: 700; font-size: 0.9rem; cursor: pointer; color: #fff; font-family: inherit; }
+  .state-btn.live { background: #28a745; }
+  .state-btn.pause { background: #ffc107; color: #333; }
+  .state-btn.end { background: #dc3545; }
+  .state-btn.schedule { background: var(--brand-accent); }
+  .state-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .current-state { font-size: 1.1rem; font-weight: 700; padding: 0.35rem 0.75rem; border-radius: 6px; display: inline-block; }
+  .current-state.DRAFT { background: #e9ecef; color: #555; }
+  .current-state.SCHEDULED { background: #d4edda; color: #155724; }
+  .current-state.LIVE { background: #28a745; color: #fff; animation: pulse-live 2s infinite; }
+  .current-state.PAUSED { background: #fff3cd; color: #856404; }
+  .current-state.ARCHIVED { background: #f8d7da; color: #721c24; }
+  @keyframes pulse-live { 0%, 100% { opacity:1; } 50% { opacity:0.85; } }
+  .page-list { list-style: none; padding: 0; }
+  .page-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.65rem 0.75rem; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.15s; border-radius: 4px; }
+  .page-item:hover { background: #f5f9ff; }
+  .page-item.active { background: #e3f0ff; border-left: 4px solid var(--brand-primary); }
+  .page-item .page-title { flex: 1; font-weight: 600; font-size: 0.95rem; }
+  .page-item .page-type { font-size: 0.75rem; color: #888; background: #f0f0f0; padding: 0.15rem 0.4rem; border-radius: 4px; }
+  .page-item .draft-badge { font-size: 0.7rem; color: #dc3545; background: #f8d7da; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 700; }
+  .page-item .visibility-toggle { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0.2rem; opacity: 0.7; }
+  .page-item .visibility-toggle:hover { opacity: 1; }
+  .page-item .push-btn { background: var(--brand-primary); color: #fff; border: none; border-radius: 4px; padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+  .page-item .push-btn:hover { filter: brightness(1.1); }
+  .preview-panel { min-height: 400px; }
+  .preview-content { padding: 1rem; background: #fafbfd; border-radius: 4px; min-height: 300px; }
+  .preview-content h3 { color: var(--brand-blue-dark); margin-bottom: 0.75rem; }
+  .preview-empty { color: #aaa; text-align: center; padding: 3rem 1rem; }
+  .stat-card { background: #f8f9fa; padding: 0.75rem; margin-bottom: 0.75rem; border-radius: 4px; }
+  .stat-card .stat-label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-card .stat-value { font-size: 1.6rem; font-weight: 700; color: var(--brand-blue-dark); }
+  .presence-list { list-style: none; padding: 0; max-height: 200px; overflow-y: auto; }
+  .presence-list li { padding: 0.3rem 0; font-size: 0.85rem; color: #555; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 0.4rem; }
+  .presence-dot { width: 8px; height: 8px; border-radius: 50%; background: #28a745; display: inline-block; }
+  .quiz-bar { background: #e9ecef; border-radius: 4px; height: 20px; position: relative; overflow: hidden; margin-bottom: 0.5rem; }
+  .quiz-bar-fill { background: var(--brand-primary); height: 100%; border-radius: 4px; transition: width 0.3s; }
+  .quiz-bar-label { position: absolute; top: 0; left: 0; right: 0; text-align: center; font-size: 0.75rem; line-height: 20px; font-weight: 700; color: #333; }
+  @media (max-width: 1024px) { .teacher-layout { grid-template-columns: 1fr; } }
+</style>
+
+<div class="container">
+<a href="/dashboard" class="back-link">&larr; Zpět na dashboard</a>
+
+<div class="lesson-header">
+  <h1><%= lesson.title %></h1>
+  <p class="meta">Kurz: <%= lesson.course.title %> &middot; Session: <span id="sessionId"><%= session.id %></span></p>
+</div>
+
+<div class="teacher-layout">
+  <!-- LEFT: Content Browser -->
+  <div>
+    <div class="panel">
+      <h2>Stránky lekce</h2>
+      <ul class="page-list" id="pageList">
+        <% lesson.pages.forEach(page => { %>
+          <li class="page-item" data-id="<%= page.id %>" data-published="<%= page.isPublished %>">
+            <span class="page-title"><%= page.title %></span>
+            <span class="page-type"><%= page.type %></span>
+            <% if (!page.isPublished) { %><span class="draft-badge">Draft</span><% } %>
+            <button class="visibility-toggle" title="Přepnout viditelnost" data-page-id="<%= page.id %>"><%= page.isPublished ? '👁️' : '🚫' %></button>
+            <button class="push-btn" data-page-id="<%= page.id %>" title="Přesunout studenty na tuto stránku">Push</button>
+          </li>
+        <% }) %>
+      </ul>
+    </div>
+    <div class="panel">
+      <h2>Ovládání relace</h2>
+      <div style="margin-bottom: 0.75rem;">Stav: <span class="current-state <%= session.currentState %>" id="currentState"><%= session.currentState %></span></div>
+      <div class="state-controls">
+        <button class="state-btn schedule" onclick="sendCommand('set_state', 'SCHEDULED')" id="btnSchedule">Naplánovat</button>
+        <button class="state-btn live" onclick="sendCommand('set_state', 'LIVE')" id="btnLive">&#9654; Spustit</button>
+        <button class="state-btn pause" onclick="sendCommand('set_state', 'PAUSED')" id="btnPause">&#9208; Pauza</button>
+        <button class="state-btn end" onclick="sendCommand('set_state', 'ARCHIVED')" id="btnEnd">&#9209; Ukončit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER: Content Preview -->
+  <div class="preview-panel panel">
+    <h2>Náhled stránky</h2>
+    <div class="preview-content" id="previewContent">
+      <div class="preview-empty">Vyberte stránku z levého panelu pro náhled</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Live Analytics -->
+  <div>
+    <div class="panel">
+      <h2>Živé statistiky</h2>
+      <div class="stat-card"><div class="stat-label">Online studentů</div><div class="stat-value" id="onlineCount">0</div></div>
+      <div class="stat-card"><div class="stat-label">Na aktuální stránce</div><div class="stat-value" id="pagePresenceCount">0</div></div>
+    </div>
+    <div class="panel">
+      <h2>Kvíz — průběh</h2>
+      <div id="quizProgressContainer"><p style="color:#aaa;font-size:0.85rem;">Žádný kvíz není aktivní.</p></div>
+    </div>
+    <div class="panel">
+      <h2>Přítomní studenti</h2>
+      <ul class="presence-list" id="presenceList"><li style="color:#aaa;">Nikdo není online.</li></ul>
+    </div>
+  </div>
+</div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(function() {
+  var SESSION_ID = '<%= session.id %>';
+  var INSTRUCTOR_ID = '<%= user.username %>';
+  var currentActivePageId = '<%= session.activePageId || "" %>';
+  var currentState = '<%= session.currentState %>';
+  var pages = <%- JSON.stringify(lesson.pages) %>;
+
+  var socket = io('/classroom', {
+    query: { sessionId: SESSION_ID, role: 'instructor', instructorId: INSTRUCTOR_ID }
+  });
+
+  socket.on('connect', function() { socket.emit('request_state_recovery'); });
+  socket.on('error_msg', function(data) { alert('Chyba: ' + data.message); });
+
+  socket.on('state_recovery', function(data) {
+    currentState = data.state; currentActivePageId = data.activePageId || '';
+    updateStateUI(); updateActivePageHighlight();
+  });
+
+  socket.on('session_state_update', function(data) {
+    currentState = data.state; currentActivePageId = data.activePageId || '';
+    updateStateUI(); updateActivePageHighlight();
+  });
+
+  socket.on('page_visibility_update', function(data) {
+    var item = document.querySelector('.page-item[data-id="' + data.pageId + '"]');
+    if (!item) return;
+    item.dataset.published = String(data.isPublished);
+    var toggle = item.querySelector('.visibility-toggle');
+    if (toggle) toggle.textContent = data.isPublished ? '👁️' : '🚫';
+    var existing = item.querySelector('.draft-badge');
+    if (data.isPublished && existing) existing.remove();
+    if (!data.isPublished && !existing) {
+      var badge = document.createElement('span'); badge.className = 'draft-badge'; badge.textContent = 'Draft';
+      var typeEl = item.querySelector('.page-type');
+      if (typeEl) typeEl.after(badge);
+    }
+    var pg = pages.find(function(p) { return p.id === data.pageId; });
+    if (pg) pg.isPublished = data.isPublished;
+  });
+
+  socket.on('stats_update_for_teacher', function(data) {
+    document.getElementById('onlineCount').textContent = data.onlineCount || 0;
+    if (currentActivePageId && data.pagePresence && data.pagePresence[currentActivePageId]) {
+      document.getElementById('pagePresenceCount').textContent = data.pagePresence[currentActivePageId].length;
+    } else { document.getElementById('pagePresenceCount').textContent = '0'; }
+
+    var presenceList = document.getElementById('presenceList');
+    if (data.onlineCount > 0 && data.pagePresence) {
+      var allStudents = [];
+      for (var key in data.pagePresence) {
+        data.pagePresence[key].forEach(function(s) { if (allStudents.indexOf(s) === -1) allStudents.push(s); });
+      }
+      presenceList.innerHTML = allStudents.length > 0
+        ? allStudents.map(function(s) { return '<li><span class="presence-dot"></span> ' + s + '</li>'; }).join('')
+        : '<li style="color:#aaa;">Nikdo není na stránce.</li>';
+    } else { presenceList.innerHTML = '<li style="color:#aaa;">Nikdo není online.</li>'; }
+
+    var container = document.getElementById('quizProgressContainer');
+    if (data.quizSubmissions && Object.keys(data.quizSubmissions).length > 0) {
+      var html = '';
+      for (var pageId in data.quizSubmissions) {
+        var count = data.quizSubmissions[pageId];
+        var pg2 = pages.find(function(p) { return p.id === pageId; });
+        var pct = data.totalStudents > 0 ? Math.round((count / data.totalStudents) * 100) : 0;
+        html += '<div style="margin-bottom:0.5rem;"><div style="font-size:0.85rem;font-weight:600;margin-bottom:0.2rem;">' + (pg2 ? pg2.title : pageId) + '</div><div class="quiz-bar"><div class="quiz-bar-fill" style="width:' + pct + '%"></div><div class="quiz-bar-label">' + count + '/' + data.totalStudents + ' (' + pct + '%)</div></div></div>';
+      }
+      container.innerHTML = html;
+    } else { container.innerHTML = '<p style="color:#aaa;font-size:0.85rem;">Žádný kvíz není aktivní.</p>'; }
+  });
+
+  window.sendCommand = function(command, value) { socket.emit('instructor_command', { command: command, value: value }); };
+
+  document.querySelectorAll('.push-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) { e.stopPropagation(); sendCommand('set_page', btn.dataset.pageId); });
+  });
+  document.querySelectorAll('.visibility-toggle').forEach(function(btn) {
+    btn.addEventListener('click', function(e) { e.stopPropagation(); sendCommand('toggle_page_visibility', btn.dataset.pageId); });
+  });
+  document.querySelectorAll('.page-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      var page = pages.find(function(p) { return p.id === item.dataset.id; });
+      if (page) showPreview(page);
+    });
+  });
+
+  function showPreview(page) {
+    var container = document.getElementById('previewContent');
+    var html = '<h3>' + page.title + '</h3><p style="font-size:0.8rem;color:#888;margin-bottom:0.75rem;">Typ: ' + page.type + ' &middot; ' + (page.isPublished ? 'Publikováno' : '&#9888; Draft') + '</p>';
+    if (page.type === 'video') {
+      html += '<div style="background:#000;color:#fff;padding:2rem;text-align:center;border-radius:4px;">🎬 Video<br><small>' + (page.content || 'URL neuvedena') + '</small></div>';
+    } else if (page.type === 'quiz') {
+      html += '<div style="background:#fff3cd;padding:1rem;border-radius:4px;">📝 Kvízová stránka</div>';
+      try { var quiz = JSON.parse(page.content || '{}'); if (quiz.questions) { html += '<div style="margin-top:0.75rem;">'; quiz.questions.forEach(function(q, i) { html += '<div style="padding:0.5rem 0;border-bottom:1px solid #eee;"><strong>' + (i+1) + '.</strong> ' + (q.text || q.question || '') + '</div>'; }); html += '</div>'; } } catch(e) {}
+    } else if (page.type === 'empty_stylized') {
+      html += '<div style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:3rem;text-align:center;border-radius:4px;font-size:1.3rem;font-weight:700;">' + (page.content || 'Vizuální oddělovač') + '</div>';
+    } else {
+      html += '<div style="line-height:1.8;">' + (page.content || '<em>Prázdný obsah</em>') + '</div>';
+    }
+    container.innerHTML = html;
+  }
+
+  function updateStateUI() {
+    var el = document.getElementById('currentState');
+    el.textContent = currentState; el.className = 'current-state ' + currentState;
+    document.getElementById('btnSchedule').disabled = currentState !== 'DRAFT';
+    document.getElementById('btnLive').disabled = ['LIVE', 'ARCHIVED'].indexOf(currentState) !== -1;
+    document.getElementById('btnPause').disabled = currentState !== 'LIVE';
+    document.getElementById('btnEnd').disabled = currentState === 'ARCHIVED';
+  }
+
+  function updateActivePageHighlight() {
+    document.querySelectorAll('.page-item').forEach(function(item) {
+      item.classList.toggle('active', item.dataset.id === currentActivePageId);
+    });
+  }
+
+  updateStateUI(); updateActivePageHighlight();
+  if (currentActivePageId) { var pg = pages.find(function(p) { return p.id === currentActivePageId; }); if (pg) showPreview(pg); }
+})();
+</script>
+<%- include('partials/footer') %>

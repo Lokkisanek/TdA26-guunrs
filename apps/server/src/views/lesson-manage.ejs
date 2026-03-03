@@ -1,0 +1,104 @@
+<%- include('partials/header', { title }) %>
+<style>
+  .badge { display: inline-block; padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+  .badge-published { background: #d4edda; color: #155724; }
+  .badge-draft { background: #f8d7da; color: #721c24; }
+  .badge-type { background: #e9ecef; color: #555; }
+  .session-item { display: flex; align-items: center; gap: 1rem; padding: 0.65rem; background: #f8f9fa; border-radius: 4px; margin-bottom: 0.5rem; flex-wrap: wrap; }
+  .session-state { font-weight: 700; font-size: 0.85rem; padding: 0.2rem 0.5rem; border-radius: 4px; }
+  .session-state.DRAFT { background: #e9ecef; color: #555; }
+  .session-state.LIVE { background: #28a745; color: #fff; }
+  .session-state.PAUSED { background: #ffc107; color: #333; }
+  .session-state.ARCHIVED { background: #f8d7da; color: #721c24; }
+  .session-state.SCHEDULED { background: #d4edda; color: #155724; }
+</style>
+
+<div class="container">
+<a href="/dashboard" class="back-link">&larr; Zpět na dashboard</a>
+<h1><%= lesson.title %></h1>
+<p class="subtitle">Kurz: <%= lesson.course.title %></p>
+
+<!-- Add Page -->
+<div class="card">
+  <h2>Přidat stránku</h2>
+  <form method="POST" action="/dashboard/lessons/<%= lesson.id %>/pages">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="pageTitle">Název stránky *</label>
+        <input type="text" id="pageTitle" name="title" required>
+      </div>
+      <div class="form-group">
+        <label for="pageType">Typ</label>
+        <select id="pageType" name="type">
+          <option value="text">Text</option>
+          <option value="video">Video</option>
+          <option value="quiz">Kvíz</option>
+          <option value="empty_stylized">Vizuální oddělovač</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="pageContent">Obsah (HTML / URL / JSON pro kvíz)</label>
+      <textarea id="pageContent" name="content"></textarea>
+    </div>
+    <div class="form-group">
+      <label><input type="checkbox" name="isPublished" value="true" checked> Publikováno</label>
+    </div>
+    <button type="submit" class="btn">Přidat stránku</button>
+  </form>
+</div>
+
+<!-- Pages List -->
+<div class="card">
+  <h2>Stránky lekce (<%= lesson.pages.length %>)</h2>
+  <% if (lesson.pages.length > 0) { %>
+    <table>
+      <thead><tr><th>#</th><th>Název</th><th>Typ</th><th>Stav</th><th>Akce</th></tr></thead>
+      <tbody>
+        <% lesson.pages.forEach(function(page, i) { %>
+          <tr>
+            <td><%= i + 1 %></td>
+            <td><%= page.title %></td>
+            <td><span class="badge badge-type"><%= page.type %></span></td>
+            <td><span class="badge <%= page.isPublished ? 'badge-published' : 'badge-draft' %>"><%= page.isPublished ? 'Publikováno' : 'Draft' %></span></td>
+            <td class="actions">
+              <form method="POST" action="/dashboard/pages/<%= page.id %>/toggle-publish">
+                <button type="submit" class="btn btn-sm btn-warning"><%= page.isPublished ? 'Skrýt' : 'Publikovat' %></button>
+              </form>
+              <form method="POST" action="/dashboard/pages/<%= page.id %>/delete" onsubmit="return confirm('Smazat stránku?');">
+                <button type="submit" class="btn btn-sm btn-danger">Smazat</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } else { %>
+    <p style="color:#888;">Zatím žádné stránky. Přidejte první výše.</p>
+  <% } %>
+</div>
+
+<!-- Live Sessions -->
+<div class="card">
+  <h2>Živé relace</h2>
+  <form method="POST" action="/dashboard/lessons/<%= lesson.id %>/sessions" style="margin-bottom:1rem;">
+    <button type="submit" class="btn btn-success">+ Vytvořit novou relaci</button>
+  </form>
+  <% if (lesson.liveSessions && lesson.liveSessions.length > 0) { %>
+    <% lesson.liveSessions.forEach(function(s) { %>
+      <div class="session-item">
+        <span class="session-state <%= s.currentState %>"><%= s.currentState %></span>
+        <span style="font-size:0.85rem;color:#888;">Vytvořena: <%= new Date(s.createdAt).toLocaleString('cs-CZ') %></span>
+        <% if (s.currentState !== 'ARCHIVED') { %>
+          <a href="/classroom/teacher/<%= s.id %>" class="btn btn-sm">Spravovat živě</a>
+        <% } %>
+        <a href="/classroom/student/<%= s.id %>" class="btn btn-sm btn-secondary">Studentský pohled</a>
+      </div>
+    <% }) %>
+  <% } else { %>
+    <p style="color:#888;">Žádné relace. Vytvořte první výše.</p>
+  <% } %>
+</div>
+</div>
+
+<%- include('partials/footer') %>

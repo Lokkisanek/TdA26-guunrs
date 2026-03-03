@@ -1,21 +1,78 @@
-<%- include('partials/header', { title }) %>
-<section>
-  <h1>Kurzy</h1>
-  <form class="search" method="get" action="/courses">
-    <input type="text" name="search" value="<%= search %>" placeholder="Hledat kurz" />
+<%- include('partials/header', { title: 'Kurzy' }) %>
+<style>
+  h1 { color: var(--brand-blue-dark); margin-bottom: 1.5rem; }
+  .navbar { background: var(--brand-primary); }
+</style>
+
+<div class="container">
+  <h1>Dostupné kurzy</h1>
+
+  <form class="search-form" method="GET" action="/courses" id="searchForm">
+    <input type="text" name="search" id="searchInput" placeholder="Hledat kurz..." value="<%= search %>" autocomplete="off">
     <button type="submit">Hledat</button>
   </form>
-  <% if (!courses.length) { %>
-    <p>Žádné kurzy nenalezeny.</p>
-  <% } %>
-  <div class="cards">
-    <% courses.forEach((course) => { %>
-      <article class="card">
-        <h3><a href="/courses/<%= course.id %>"><%= course.title %></a></h3>
-        <p><%= course.shortDescription %></p>
-        <a class="btn secondary" href="/courses/<%= course.id %>">Detail</a>
-      </article>
-    <% }) %>
+
+  <div class="courses-grid" id="coursesGrid">
+    <% if (courses.length > 0) { %>
+      <% courses.forEach(course => { %>
+        <a href="/courses/<%= course.id %>" class="course-card"
+           data-name="<%= course.title.toLowerCase() %>"
+           data-desc="<%= (course.shortDescription || course.description || '').toLowerCase() %>">
+          <h2><%= course.title %></h2>
+          <p><%= course.shortDescription || course.description || 'Bez popisu' %></p>
+          <span class="card-btn">Zobrazit detail</span>
+        </a>
+      <% }) %>
+    <% } else { %>
+      <div class="no-courses">
+        <p>Žádné kurzy nenalezeny.</p>
+      </div>
+    <% } %>
   </div>
-</section>
+</div>
+
+<script>
+  (function() {
+    var searchInput = document.getElementById('searchInput');
+    var coursesGrid = document.getElementById('coursesGrid');
+    var cards = Array.from(coursesGrid.querySelectorAll('.course-card'));
+
+    searchInput.addEventListener('input', function() {
+      var query = this.value.toLowerCase().trim();
+
+      if (!query) {
+        cards.forEach(function(card) { card.style.display = ''; });
+        var le = coursesGrid.querySelector('.live-search-empty');
+        if (le) le.remove();
+        return;
+      }
+
+      var anyVisible = false;
+      cards.forEach(function(card) {
+        var name = card.dataset.name || '';
+        var desc = card.dataset.desc || '';
+        var matches = name.includes(query) || desc.includes(query);
+        card.style.display = matches ? '' : 'none';
+        if (matches) anyVisible = true;
+      });
+
+      var noCoursesDiv = coursesGrid.querySelector('.live-search-empty');
+      if (!anyVisible && cards.length > 0) {
+        if (!noCoursesDiv) {
+          var div = document.createElement('div');
+          div.className = 'no-courses live-search-empty';
+          div.innerHTML = '<p>Žádné kurzy nenalezeny.</p>';
+          coursesGrid.appendChild(div);
+        }
+      } else if (noCoursesDiv) {
+        noCoursesDiv.remove();
+      }
+    });
+
+    if (searchInput.value) {
+      searchInput.dispatchEvent(new Event('input'));
+    }
+  })();
+</script>
+
 <%- include('partials/footer') %>

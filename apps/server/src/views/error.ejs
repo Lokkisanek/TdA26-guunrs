@@ -1,7 +1,9 @@
-<%- include('partials/header', { title }) %>
-<section>
-  <h1><%= title %></h1>
-  <p><%= message %></p>
-  <a class="btn" href="/">Zpět na úvod</a>
-</section>
+<%- include('partials/header', { title: 'Chyba' }) %>
+
+<div class="container-sm" style="text-align:center; padding-top:4rem; padding-bottom:4rem;">
+  <h1 style="color:var(--brand-blue-dark); margin-bottom:1rem;">Chyba</h1>
+  <p style="color:#555; font-size:1.1rem; margin-bottom:2rem;"><%= typeof message !== 'undefined' && message ? message : 'Něco se pokazilo.' %></p>
+  <a href="/" class="btn">Zpět na hlavní stránku</a>
+</div>
+
 <%- include('partials/footer') %>

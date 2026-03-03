@@ -1,21 +1,29 @@
 import "dotenv/config";
 import path from "node:path";
+import { createServer } from "node:http";
 import express, { type NextFunction, type Request, type Response } from "express";
 import session from "express-session";
 import methodOverride from "method-override";
 import { PrismaClient } from "@prisma/client";
 import apiRouter from "./routes/api.js";
 import pagesRouter from "./routes/pages.js";
+import lessonsRouter from "./routes/lessons.js";
+import { initSocketIO } from "./socket/classroom.js";
 
 const prisma = new PrismaClient();
 const app = express();
+const httpServer = createServer(app);
 const ROOT_DIR = process.cwd();
 const port = Number(process.env.PORT) || 3000;
+
+// Initialize Socket.io
+const io = initSocketIO(httpServer);
 
 app.set("view engine", "ejs");
 app.set("views", path.join(ROOT_DIR, "src", "views"));
 
 app.use(express.static(path.join(ROOT_DIR, "public")));
+app.use("/fonts/brand", express.static(path.join(ROOT_DIR, "..", "..", "Think different Academy CZ-20251210T193908Z-3-001", "Think different Academy CZ", "TdA _ Fonts", "static")));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(methodOverride("_method"));
@@ -63,12 +71,13 @@ app.get("/api/health", async (_req, res) => {
 
 app.use(pagesRouter);
 app.use("/api", apiRouter);
+app.use("/api", lessonsRouter);
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 	console.error(err);
 	res.status(500).render("error", { title: "Chyba", message: "Něco se pokazilo." });
 });
 
-app.listen(port, "0.0.0.0", () => {
+httpServer.listen(port, "0.0.0.0", () => {
 	console.log(`Server listening on http://0.0.0.0:${port}`);
 });

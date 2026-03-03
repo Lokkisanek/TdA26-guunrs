@@ -1,19 +1,34 @@
-<%- include('partials/header', { title }) %>
-<section class="auth">
+<%- include('partials/header', { title: 'Přihlášení' }) %>
+<style>
+  body { background: var(--brand-primary); }
+  .main { display: flex; align-items: center; justify-content: center; padding: 2rem 0; }
+  .login-container { background: #ffffff; padding: 3rem 2.25rem; border-radius: 0; box-shadow: none; width: 100%; max-width: 460px; border-top: 6px solid var(--brand-blue-dark); }
+  .login-container h1 { text-align: center; color: var(--brand-blue-dark); margin-bottom: 1.25rem; font-size: 1.6rem; }
+  .login-btn { width: 100%; padding: 1rem; background: var(--brand-primary); color: white; border: 2px solid rgba(0,0,0,0.06); border-radius: 0; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: filter 0.12s ease; }
+  .login-btn:hover { filter: brightness(1.04); }
+  @media (max-width: 480px) { .login-container { padding: 1.5rem; margin: 1rem; } }
+</style>
+
+<div class="login-container">
   <h1>Přihlášení</h1>
+
   <% if (error) { %>
-    <p class="error"><%= error %></p>
+    <div class="error"><%= error %></div>
   <% } %>
-  <form method="post" action="/login" class="form">
-    <label>
-      Uživatelské jméno
-      <input name="username" required />
-    </label>
-    <label>
-      Heslo
-      <input type="password" name="password" required />
-    </label>
-    <button type="submit">Přihlásit</button>
+
+  <form method="POST" action="/login">
+    <div class="form-group" style="margin-bottom: 1rem;">
+      <label for="username">Uživatelské jméno</label>
+      <input type="text" id="username" name="username" required>
+    </div>
+    <div class="form-group" style="margin-bottom: 1.25rem;">
+      <label for="password">Heslo</label>
+      <input type="password" id="password" name="password" required>
+    </div>
+    <button type="submit" class="login-btn">Přihlásit se</button>
   </form>
-</section>
+
+  <a href="/" class="back-link" style="display:block;text-align:center;margin-top:1.25rem;">← Zpět na hlavní stránku</a>
+</div>
+
 <%- include('partials/footer') %>
