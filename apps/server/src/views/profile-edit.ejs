@@ -1,0 +1,114 @@
+<%- include('partials/header', { title: t('edit_profile') }) %>
+<style>
+  h1 { color: var(--brand-blue-dark); margin-bottom: 1.5rem; }
+  .form-section { 
+    margin-top: 2rem; 
+    padding-top: 1.5rem; 
+    border-top: 1px solid #eee; 
+  }
+  .form-section h3 { 
+    color: var(--brand-blue-dark); 
+    margin-bottom: 1rem; 
+    font-size: 1.1rem; 
+  }
+  .hint { font-size: 0.8rem; color: #888; margin-top: 0.25rem; }
+  .success { background: #d4edda; color: #155724; padding: 0.75rem; margin-bottom: 1rem; border-left: 4px solid #28a745; }
+  .uuid-field { 
+    background: #f5f5f5; 
+    padding: 0.75rem; 
+    font-family: monospace; 
+    font-size: 0.85rem; 
+    word-break: break-all; 
+    border: 1px solid #ddd; 
+    color: #666; 
+  }
+  @media (max-width: 480px) { 
+    .form-row { flex-direction: column; gap: 0; }
+  }
+</style>
+
+<div class="container-sm">
+  <div class="card" style="border-top:6px solid var(--brand-blue-dark);">
+    <h1 style="text-align:center;"><%= t('edit_profile') %></h1>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="error"><%= error %></div>
+  <% } %>
+
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div class="success"><%= success %></div>
+  <% } %>
+
+  <form method="POST" action="/profile/edit" id="editForm">
+    <!-- UUID (read-only) -->
+    <div class="form-group" style="margin-bottom: 1rem;">
+      <label>UUID</label>
+      <div class="uuid-field"><%= profileUser.id %></div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label for="firstName"><%= t('first_name') %> *</label>
+        <input type="text" id="firstName" name="firstName" required value="<%= profileUser.firstName %>">
+      </div>
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label for="lastName"><%= t('last_name') %> *</label>
+        <input type="text" id="lastName" name="lastName" required value="<%= profileUser.lastName %>">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 1rem;">
+      <label for="email"><%= t('email') %> *</label>
+      <input type="email" id="email" name="email" required value="<%= profileUser.email %>">
+    </div>
+
+    <div class="form-section">
+      <h3><%= t('change_password') %></h3>
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label for="currentPassword"><%= t('current_password') %></label>
+        <input type="password" id="currentPassword" name="currentPassword">
+        <div class="hint"><%= t('leave_blank') %></div>
+      </div>
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label for="newPassword"><%= t('new_password') %></label>
+        <input type="password" id="newPassword" name="newPassword" minlength="6">
+      </div>
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label for="confirmPassword"><%= t('confirm_password') %></label>
+        <input type="password" id="confirmPassword" name="confirmPassword" minlength="6">
+      </div>
+    </div>
+
+    <button type="submit" class="btn" id="submitBtn" style="width:100%; padding:1rem;"><%= t('save_changes') %></button>
+  </form>
+
+  <a href="/profile" class="back-link" style="display:block;text-align:center;margin-top:1.25rem;">&larr; <%= t('back_to_profile') %></a>
+  </div>
+</div>
+
+<script>
+  document.getElementById('editForm').addEventListener('submit', function(e) {
+    var newPassword = document.getElementById('newPassword').value;
+    var confirmPassword = document.getElementById('confirmPassword').value;
+    var currentPassword = document.getElementById('currentPassword').value;
+    
+    // If new password is set, require confirm password
+    if (newPassword && newPassword !== confirmPassword) {
+      e.preventDefault();
+      alert('<%= t("passwords_not_match") %>');
+      return false;
+    }
+    
+    // If new password is set, require current password
+    if (newPassword && !currentPassword) {
+      e.preventDefault();
+      alert('<%= t("current_password") %> is required');
+      return false;
+    }
+    
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('submitBtn').textContent = '<%= t("loading") %>';
+  });
+</script>
+
+<%- include('partials/footer') %>

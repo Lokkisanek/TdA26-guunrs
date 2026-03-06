@@ -28,7 +28,11 @@
     <button type="submit" class="login-btn"><%= t('login_button') %></button>
   </form>
 
-  <a href="/" class="back-link" style="display:block;text-align:center;margin-top:1.25rem;">&larr; <%= t('back_to_home') %></a>
+  <p style="text-align:center;margin-top:1.25rem;color:#666;">
+    <%= t('no_account_yet') %> <a href="/register" style="color:var(--brand-primary);font-weight:700;"><%= t('register') %></a>
+  </p>
+
+  <a href="/" class="back-link" style="display:block;text-align:center;margin-top:1rem;">&larr; <%= t('back_to_home') %></a>
 </div>
 
 <%- include('partials/footer') %>

@@ -70,6 +70,239 @@ router.get("/terms", (_req, res) => {
   });
 });
 
+router.get("/about", (_req, res) => {
+  res.render("about", {
+    title: t("about_title", res.locals.lang),
+    noIndex: true,
+  });
+});
+
+router.get("/profile", async (req, res, next) => {
+  try {
+    let profileUser = null;
+    
+    // Check for registered user
+    if (req.session.userId) {
+      profileUser = await req.prisma.user.findUnique({
+        where: { id: req.session.userId },
+      });
+    } 
+    // Check for hardcoded lecturer account
+    else if (req.session.user && req.session.user.username === USERNAME) {
+      profileUser = {
+        firstName: "Lecturer",
+        lastName: "Admin",
+        email: "lecturer",
+        isAdmin: true,
+      };
+    }
+    
+    res.render("profile", {
+      title: t("profile_title", res.locals.lang),
+      profileUser,
+      noIndex: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router
+  .route("/profile/edit")
+  .get(async (req, res, next) => {
+    try {
+      // Only registered users can edit profile
+      if (!req.session.userId) {
+        return res.redirect("/profile");
+      }
+
+      const profileUser = await req.prisma.user.findUnique({
+        where: { id: req.session.userId },
+      });
+
+      if (!profileUser) {
+        return res.redirect("/profile");
+      }
+
+      res.render("profile-edit", {
+        title: t("edit_profile", res.locals.lang),
+        profileUser,
+        noIndex: true,
+      });
+    } catch (error) {
+      next(error);
+    }
+  })
+  .post(async (req, res, next) => {
+    try {
+      if (!req.session.userId) {
+        return res.redirect("/profile");
+      }
+
+      const { firstName, lastName, email, currentPassword, newPassword, confirmPassword } = req.body;
+      const lang = res.locals.lang;
+
+      const profileUser = await req.prisma.user.findUnique({
+        where: { id: req.session.userId },
+      });
+
+      if (!profileUser) {
+        return res.redirect("/profile");
+      }
+
+      // Check if email is already taken by another user
+      const existingUser = await req.prisma.user.findFirst({
+        where: {
+          email: email.toLowerCase().trim(),
+          NOT: { id: req.session.userId },
+        },
+      });
+
+      if (existingUser) {
+        return res.status(400).render("profile-edit", {
+          title: t("edit_profile", lang),
+          error: t("email_already_exists", lang),
+          profileUser: { ...profileUser, firstName, lastName, email },
+          noIndex: true,
+        });
+      }
+
+      // Prepare update data
+      const updateData: any = {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.toLowerCase().trim(),
+      };
+
+      // Handle password change
+      if (newPassword) {
+        if (newPassword !== confirmPassword) {
+          return res.status(400).render("profile-edit", {
+            title: t("edit_profile", lang),
+            error: t("passwords_not_match", lang),
+            profileUser: { ...profileUser, firstName, lastName, email },
+            noIndex: true,
+          });
+        }
+
+        const crypto = await import("crypto");
+        const hashedCurrentPassword = crypto.createHash("sha256").update(currentPassword || "").digest("hex");
+
+        if (hashedCurrentPassword !== profileUser.password) {
+          return res.status(400).render("profile-edit", {
+            title: t("edit_profile", lang),
+            error: t("incorrect_password", lang),
+            profileUser: { ...profileUser, firstName, lastName, email },
+            noIndex: true,
+          });
+        }
+
+        updateData.password = crypto.createHash("sha256").update(newPassword).digest("hex");
+      }
+
+      // Update user
+      const updatedUser = await req.prisma.user.update({
+        where: { id: req.session.userId },
+        data: updateData,
+      });
+
+      // Update session
+      req.session.user = {
+        username: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        isAdmin: updatedUser.isAdmin,
+      };
+
+      res.render("profile-edit", {
+        title: t("edit_profile", lang),
+        profileUser: updatedUser,
+        success: t("profile_updated", lang),
+        noIndex: true,
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+router
+  .route("/register")
+  .get((req, res) => {
+    if (req.session.userId) {
+      return res.redirect("/courses");
+    }
+    res.render("register", {
+      title: t("register_title", res.locals.lang),
+      noIndex: true,
+    });
+  })
+  .post(async (req, res, next) => {
+    try {
+      const { firstName, lastName, email, password, confirmPassword, acceptTerms } = req.body;
+      const lang = res.locals.lang;
+
+      // Validation
+      if (!acceptTerms) {
+        return res.status(400).render("register", {
+          title: t("register_title", lang),
+          error: t("must_accept_terms", lang),
+          firstName,
+          lastName,
+          email,
+          noIndex: true,
+        });
+      }
+
+      if (password !== confirmPassword) {
+        return res.status(400).render("register", {
+          title: t("register_title", lang),
+          error: t("passwords_not_match", lang),
+          firstName,
+          lastName,
+          email,
+          noIndex: true,
+        });
+      }
+
+      // Check if email already exists
+      const existingUser = await req.prisma.user.findUnique({
+        where: { email: email.toLowerCase().trim() },
+      });
+
+      if (existingUser) {
+        return res.status(400).render("register", {
+          title: t("register_title", lang),
+          error: t("email_already_exists", lang),
+          firstName,
+          lastName,
+          email,
+          noIndex: true,
+        });
+      }
+
+      // Create user (simple hash for demo - in production use bcrypt)
+      const crypto = await import("crypto");
+      const hashedPassword = crypto.createHash("sha256").update(password).digest("hex");
+
+      const user = await req.prisma.user.create({
+        data: {
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: email.toLowerCase().trim(),
+          password: hashedPassword,
+          isAdmin: false,
+        },
+      });
+
+      // Auto-login
+      req.session.userId = user.id;
+      req.session.user = { username: user.email, firstName: user.firstName, lastName: user.lastName, isAdmin: false };
+      res.redirect("/courses");
+    } catch (error) {
+      next(error);
+    }
+  });
+
 router.get("/courses", async (req, res, next) => {
   try {
     const search = req.query.search?.toString().trim() ?? "";
@@ -160,22 +393,58 @@ router.get("/courses/:id", async (req, res, next) => {
 router
   .route("/login")
   .get((req, res) => {
+    if (req.session.userId || req.session.user) {
+      return res.redirect("/courses");
+    }
     res.render("login", { title: t("login_title", res.locals.lang), error: null, noIndex: true });
   })
-  .post((req, res) => {
-    const { username, password } = req.body;
-    if (username === USERNAME && password === PASSWORD) {
-      req.session.user = { username };
-      const redirectTo = req.session.returnTo || "/dashboard";
-      delete req.session.returnTo;
-      return res.redirect(redirectTo);
-    }
+  .post(async (req, res, next) => {
+    try {
+      const { username, password } = req.body;
+      const lang = res.locals.lang;
 
-    res.status(401).render("login", {
-      title: t("login_title", res.locals.lang),
-      error: t("invalid_credentials", res.locals.lang),
-      noIndex: true,
-    });
+      // Check hardcoded admin first
+      if (username === USERNAME && password === PASSWORD) {
+        req.session.user = { username, isAdmin: true };
+        const redirectTo = req.session.returnTo || "/dashboard";
+        delete req.session.returnTo;
+        return res.redirect(redirectTo);
+      }
+
+      // Check registered users
+      const crypto = await import("crypto");
+      const hashedPassword = crypto.createHash("sha256").update(password).digest("hex");
+
+      const user = await req.prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: username.toLowerCase().trim() },
+          ],
+          password: hashedPassword,
+        },
+      });
+
+      if (user) {
+        req.session.userId = user.id;
+        req.session.user = {
+          username: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          isAdmin: user.isAdmin,
+        };
+        const redirectTo = req.session.returnTo || (user.isAdmin ? "/dashboard" : "/courses");
+        delete req.session.returnTo;
+        return res.redirect(redirectTo);
+      }
+
+      res.status(401).render("login", {
+        title: t("login_title", lang),
+        error: t("invalid_credentials", lang),
+        noIndex: true,
+      });
+    } catch (error) {
+      next(error);
+    }
   });
 
 router.post("/logout", isAuthenticated, (req, res) => {

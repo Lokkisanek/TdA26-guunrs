@@ -1,0 +1,40 @@
+<%- include('partials/header', { title: t('profile_title') }) %>
+<style>
+  h1 { color: var(--brand-blue-dark); margin-bottom: 0.25rem; }
+</style>
+
+<% if (typeof profileUser !== 'undefined' && profileUser) { %>
+<div class="container-sm">
+  <h1><%= t('profile') %></h1>
+  <p class="subtitle"><%= t('academy_id') %>: <%= t('active').toUpperCase() %></p>
+
+  <div class="card" style="border-top:6px solid var(--brand-primary);">
+    <div class="form-group" style="margin-bottom:1.25rem; padding-bottom:1.25rem; border-bottom:1px solid #eee;">
+      <label style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#888;"><%= t('full_name').toUpperCase() %></label>
+      <div style="font-size:1.1rem; font-weight:600; color:#333; margin-top:0.25rem;"><%= profileUser.firstName %> <%= profileUser.lastName %></div>
+    </div>
+    <div class="form-group" style="margin-bottom:1.25rem; padding-bottom:1.25rem; border-bottom:1px solid #eee;">
+      <label style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#888;"><%= t('email_address').toUpperCase() %></label>
+      <div style="font-size:1.1rem; font-weight:600; color:#333; margin-top:0.25rem;"><a href="mailto:<%= profileUser.email %>" style="color:var(--brand-primary); text-decoration:none;"><%= profileUser.email %></a></div>
+    </div>
+    <% if (profileUser.id) { %>
+    <div class="form-group" style="margin-bottom:1.5rem;">
+      <label style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#888;">UUID</label>
+      <div style="font-size:0.85rem; font-family:monospace; word-break:break-all; color:#666; margin-top:0.25rem;"><%= profileUser.id %></div>
+    </div>
+    <a href="/profile/edit" class="btn" style="display:block; text-align:center; width:100%;"><%= t('edit_account_settings').toUpperCase() %></a>
+    <% } %>
+  </div>
+</div>
+<% } else { %>
+<div class="container-sm" style="display:flex; align-items:center; justify-content:center; min-height:60vh;">
+  <div class="card" style="border-top:6px solid var(--brand-blue-dark); max-width:460px; width:100%; text-align:center; padding:2.5rem;">
+    <h1 style="margin-bottom:1rem; font-size:1.6rem;"><%= t('not_logged_in') %></h1>
+    <p style="color:#666; margin-bottom:1.5rem;"><%= t('please_login') %></p>
+    <a href="/login" class="btn" style="display:block; width:100%; text-align:center;"><%= t('login') %></a>
+    <a href="/" class="back-link" style="display:block; text-align:center; margin-top:1.25rem;">&larr; <%= t('back_to_home') %></a>
+  </div>
+</div>
+<% } %>
+
+<%- include('partials/footer') %>

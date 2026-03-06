@@ -1,0 +1,87 @@
+<%- include('partials/header', { title: t('register_title') }) %>
+<style>
+  body { background: var(--brand-primary); }
+  .main { display: flex; align-items: center; justify-content: center; padding: 2rem 0; }
+  .register-container { background: #ffffff; padding: 3rem 2.25rem; border-radius: 0; box-shadow: none; width: 100%; max-width: 500px; border-top: 6px solid var(--brand-blue-dark); }
+  .register-container h1 { text-align: center; color: var(--brand-blue-dark); margin-bottom: 1.25rem; font-size: 1.6rem; }
+  .register-btn { width: 100%; padding: 1rem; background: var(--brand-primary); color: white; border: 2px solid rgba(0,0,0,0.06); border-radius: 0; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: filter 0.12s ease; }
+  .register-btn:hover { filter: brightness(1.04); }
+  .register-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .form-row { display: flex; gap: 1rem; }
+  .form-row .form-group { flex: 1; }
+  .checkbox-group { display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 1.25rem; }
+  .checkbox-group input[type="checkbox"] { margin-top: 0.25rem; width: 18px; height: 18px; cursor: pointer; }
+  .checkbox-group label { font-size: 0.9rem; color: #444; line-height: 1.4; cursor: pointer; }
+  .checkbox-group a { color: var(--brand-primary); text-decoration: underline; }
+  .success { background: #d4edda; color: #155724; padding: 0.75rem; margin-bottom: 1rem; border-left: 4px solid #28a745; }
+  @media (max-width: 480px) { 
+    .register-container { padding: 1.5rem; margin: 1rem; } 
+    .form-row { flex-direction: column; gap: 0; }
+  }
+</style>
+
+<div class="register-container">
+  <h1><%= t('register_title') %></h1>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="error"><%= error %></div>
+  <% } %>
+
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div class="success"><%= success %></div>
+  <% } %>
+
+  <form method="POST" action="/register" id="registerForm">
+    <div class="form-row">
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label for="firstName"><%= t('first_name') %> *</label>
+        <input type="text" id="firstName" name="firstName" required value="<%= typeof firstName !== 'undefined' ? firstName : '' %>">
+      </div>
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label for="lastName"><%= t('last_name') %> *</label>
+        <input type="text" id="lastName" name="lastName" required value="<%= typeof lastName !== 'undefined' ? lastName : '' %>">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom: 1rem;">
+      <label for="email"><%= t('email') %> *</label>
+      <input type="email" id="email" name="email" required value="<%= typeof email !== 'undefined' ? email : '' %>">
+    </div>
+    <div class="form-group" style="margin-bottom: 1rem;">
+      <label for="password"><%= t('password') %> *</label>
+      <input type="password" id="password" name="password" required minlength="6">
+    </div>
+    <div class="form-group" style="margin-bottom: 1rem;">
+      <label for="confirmPassword"><%= t('confirm_password') %> *</label>
+      <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6">
+    </div>
+    <div class="checkbox-group">
+      <input type="checkbox" id="acceptTerms" name="acceptTerms" required>
+      <label for="acceptTerms">
+        <%= t('accept_terms') %> <a href="/about" target="_blank"><%= t('terms_and_privacy') %></a> *
+      </label>
+    </div>
+    <button type="submit" class="register-btn" id="submitBtn"><%= t('register_button') %></button>
+  </form>
+
+  <p style="text-align:center;margin-top:1.25rem;color:#666;">
+    <%= t('already_have_account') %> <a href="/login" style="color:var(--brand-primary);font-weight:700;"><%= t('login') %></a>
+  </p>
+
+  <a href="/" class="back-link" style="display:block;text-align:center;margin-top:1rem;">&larr; <%= t('back_to_home') %></a>
+</div>
+
+<script>
+  document.getElementById('registerForm').addEventListener('submit', function(e) {
+    var password = document.getElementById('password').value;
+    var confirmPassword = document.getElementById('confirmPassword').value;
+    if (password !== confirmPassword) {
+      e.preventDefault();
+      alert('<%= t("passwords_not_match") %>');
+      return false;
+    }
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('submitBtn').textContent = '<%= t("loading") %>';
+  });
+</script>
+
+<%- include('partials/footer') %>

@@ -1,219 +1,113 @@
 <%- include('partials/header', { title: 'Dashboard' }) %>
 <style>
-  .tutorial-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:flex-start; padding:2rem; overflow-y:auto; }
-  .tutorial-overlay.active { display:flex; }
-  .tutorial-box { background:#fff; max-width:680px; width:100%; border-top:6px solid var(--brand-primary); padding:2rem; margin:2rem 0; }
-  .tutorial-box h2 { color:var(--brand-blue-dark); margin-bottom:1rem; font-size:1.5rem; }
-  .tutorial-box .welcome-text { font-size:1.1rem; color:#555; margin-bottom:1.5rem; line-height:1.6; }
-  .tutorial-step { padding:1rem; margin-bottom:0.75rem; background:#f8f9fa; border-left:4px solid var(--brand-primary); }
-  .tutorial-step h3 { color:var(--brand-blue-dark); margin-bottom:0.35rem; font-size:1.05rem; }
-  .tutorial-step p { color:#555; font-size:0.95rem; line-height:1.5; margin:0; }
-  .tutorial-close-btn { margin-top:1.5rem; padding:0.85rem 2rem; background:var(--brand-primary); color:#fff; border:none; border-radius:6px; font-size:1rem; font-weight:700; cursor:pointer; font-family:inherit; display:block; width:100%; }
-  .tutorial-close-btn:hover { filter:brightness(1.08); }
-  .tutorial-trigger { background:none; border:2px solid var(--brand-primary); color:var(--brand-primary); padding:0.4rem 0.8rem; border-radius:6px; font-size:0.85rem; font-weight:700; cursor:pointer; font-family:inherit; }
-  .tutorial-trigger:hover { background:var(--brand-primary); color:#fff; }
-
-  /* Toast notification */
-  .toast { position:fixed; bottom:2rem; right:2rem; background:#28a745; color:#fff; padding:0.85rem 1.5rem; border-radius:6px; font-weight:700; font-size:0.95rem; z-index:3000; transform:translateY(120%); opacity:0; visibility:hidden; pointer-events:none; transition:transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease; box-shadow:0 4px 12px rgba(0,0,0,0.15); }
-  .toast.show { transform:translateY(0); opacity:1; visibility:visible; pointer-events:auto; }
-  .toast.error { background:#dc3545; }
+  h1 { color: var(--brand-blue-dark); margin-bottom: 0.25rem; }
 </style>
 
-<!-- Tutorial Overlay -->
-<div class="tutorial-overlay" id="tutorialOverlay">
-  <div class="tutorial-box">
-    <h2><%= t('tutorial_title') %></h2>
-    <p class="welcome-text"><%= t('tutorial_welcome') %></p>
-
-    <div class="tutorial-step">
-      <h3><%= t('tutorial_step1_title') %></h3>
-      <p><%= t('tutorial_step1_desc') %></p>
+<div class="container">
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-bottom:2rem;">
+    <div>
+      <h1>Dashboard</h1>
+      <p class="subtitle" style="margin-bottom:0;"><%= t('manage_courses') %></p>
     </div>
-    <div class="tutorial-step">
-      <h3><%= t('tutorial_step2_title') %></h3>
-      <p><%= t('tutorial_step2_desc') %></p>
-    </div>
-    <div class="tutorial-step">
-      <h3><%= t('tutorial_step3_title') %></h3>
-      <p><%= t('tutorial_step3_desc') %></p>
-    </div>
-    <div class="tutorial-step">
-      <h3><%= t('tutorial_step4_title') %></h3>
-      <p><%= t('tutorial_step4_desc') %></p>
-    </div>
-    <div class="tutorial-step">
-      <h3><%= t('tutorial_step5_title') %></h3>
-      <p><%= t('tutorial_step5_desc') %></p>
-    </div>
-    <div class="tutorial-step">
-      <h3><%= t('tutorial_step6_title') %></h3>
-      <p><%= t('tutorial_step6_desc') %></p>
-    </div>
-
-    <button class="tutorial-close-btn" id="closeTutorial"><%= t('tutorial_close') %></button>
+    <button class="btn" id="openCreateModal" style="font-size:1rem; padding:0.7rem 1.5rem;">+ <%= t('add_new_course') %></button>
   </div>
+
+  <% if (courses.length > 0) { %>
+    <div class="courses-grid">
+      <% courses.forEach(function(course) { %>
+        <div class="card" style="border-top:6px solid var(--brand-primary); position:relative; padding:1.5rem;">
+          <p style="font-size:0.75rem; color:#888; margin-bottom:0.5rem;">ID: <%= course.id.substring(0, 8).toUpperCase() %></p>
+          <h2 style="font-size:1.3rem; color:#333; margin-bottom:0.25rem;"><%= course.title %></h2>
+          <p style="color:#666; font-size:0.95rem; margin-bottom:1.25rem; line-height:1.5;"><%= course.shortDescription || '' %></p>
+          <div class="actions">
+            <a href="/courses/<%= course.id %>" class="btn btn-secondary btn-sm"><%= t('view') %></a>
+            <button type="button" class="btn btn-sm" onclick="openEditModal('<%= course.id %>', '<%= course.title.replace(/'/g, "\\'") %>', '<%= (course.shortDescription || '').replace(/'/g, "\\'") %>')"><%= t('edit') %></button>
+            <form method="POST" action="/dashboard/<%= course.id %>?_method=DELETE" onsubmit="return confirm('<%= t('delete_course_confirm') %>');" style="display:inline;">
+              <button type="submit" class="btn btn-danger btn-sm"><%= t('delete') %></button>
+            </form>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="no-courses">
+      <p><%= t('no_courses_yet') %></p>
+    </div>
+  <% } %>
 </div>
 
-<div class="container">
-  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem;">
-    <div>
-      <h1 style="color:var(--brand-blue-dark); margin-bottom:0.25rem;">Dashboard</h1>
-      <p class="subtitle"><%= t('manage_courses') %></p>
+<!-- Create Course Modal -->
+<div class="modal" id="createModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2><%= t('add_new_course') %></h2>
+      <button class="close-btn" id="closeCreateModal">&times;</button>
     </div>
-    <button class="tutorial-trigger" id="showTutorial">❓ <%= t('tutorial_show') %></button>
-  </div>
-
-  <!-- Add course -->
-  <div class="card">
-    <h2><%= t('add_new_course') %></h2>
     <form method="POST" action="/dashboard">
-      <div class="form-row">
-        <div class="form-group">
-          <label for="title"><%= t('course_title') %> *</label>
-          <input type="text" id="title" name="title" required>
-        </div>
-        <div class="form-group">
-          <label for="shortDescription"><%= t('short_description') %> *</label>
-          <input type="text" id="shortDescription" name="shortDescription" required>
-        </div>
+      <div class="form-group">
+        <label for="title"><%= t('course_title') %> *</label>
+        <input type="text" id="title" name="title" required>
+      </div>
+      <div class="form-group">
+        <label for="shortDescription"><%= t('short_description') %></label>
+        <input type="text" id="shortDescription" name="shortDescription">
       </div>
       <div class="form-group">
         <label for="description"><%= t('description') %></label>
         <textarea id="description" name="description"></textarea>
       </div>
-      <button type="submit" class="btn"><%= t('add_course') %></button>
+      <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+        <button type="submit" class="btn"><%= t('add_course') %></button>
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('createModal').classList.remove('active')"><%= t('cancel') %></button>
+      </div>
     </form>
-  </div>
-
-  <!-- Courses list -->
-  <div class="card">
-    <h2><%= t('course_list') %></h2>
-    <% if (courses.length > 0) { %>
-      <table>
-        <thead>
-          <tr>
-            <th><%= t('title') %></th>
-            <th><%= t('short_description') %></th>
-            <th><%= t('actions') %></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% courses.forEach(function(course) { %>
-            <tr>
-              <td data-label="<%= t('title') %>"><%= course.title %></td>
-              <td data-label="<%= t('short_description') %>"><%= course.shortDescription || '-' %></td>
-              <td data-label="<%= t('actions') %>" class="actions">
-                <a href="/courses/<%= course.id %>" class="btn btn-secondary btn-sm"><%= t('view') %></a>
-                <button type="button" class="btn btn-sm" onclick="toggleEdit('<%= course.id %>')"><%= t('edit') %></button>
-                <form method="POST" action="/dashboard/<%= course.id %>?_method=DELETE" onsubmit="return confirm('<%= t('delete_course_confirm') %>');">
-                  <button type="submit" class="btn btn-danger btn-sm"><%= t('delete') %></button>
-                </form>
-              </td>
-            </tr>
-            <tr>
-              <td colspan="3" style="padding:0; border:none;">
-                <div id="edit-<%= course.id %>" class="edit-form">
-                  <form method="POST" action="/dashboard/<%= course.id %>?_method=PUT">
-                    <div class="form-row">
-                      <div class="form-group">
-                        <label><%= t('course_title') %></label>
-                        <input type="text" name="title" value="<%= course.title %>" required>
-                      </div>
-                      <div class="form-group">
-                        <label><%= t('short_description') %></label>
-                        <input type="text" name="shortDescription" value="<%= course.shortDescription || '' %>">
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label><%= t('description') %></label>
-                      <textarea name="description"><%= course.description || '' %></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-sm"><%= t('save_changes') %></button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleEdit('<%= course.id %>')"><%= t('cancel') %></button>
-                  </form>
-                </div>
-              </td>
-            </tr>
-
-            <!-- Lessons for this course -->
-            <tr>
-              <td colspan="3" style="padding:0.5rem 0; border:none;">
-                <div class="lessons-section" style="margin-top:0; padding-top:0.5rem; border-top:none;">
-                  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem;">
-                    <strong style="color:var(--brand-blue-dark);"><%= t('course_lessons') %></strong>
-                    <form method="POST" action="/dashboard/courses/<%= course.id %>/lessons" style="display:inline-flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-                      <input type="text" name="title" placeholder="<%= t('lesson_name') %>" style="padding:0.35rem 0.6rem;border:1px solid rgba(0,0,0,0.06);font-size:0.9rem;font-family:inherit;">
-                      <button type="submit" class="btn btn-success btn-sm"><%= t('new_lesson') %></button>
-                    </form>
-                  </div>
-                  <% if (course.lessons && course.lessons.length > 0) { %>
-                    <% course.lessons.forEach(function(lesson) { %>
-                      <div class="lesson-card">
-                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
-                          <div>
-                            <h3 style="margin:0;"><%= lesson.title %></h3>
-                            <div class="lesson-meta" style="margin-top:0.25rem;">
-                              <span class="pages-count"><%= lesson._count ? lesson._count.pages : 0 %> <%= t('pages') %></span>
-                              <span><%= lesson._count ? lesson._count.liveSessions : 0 %> <%= t('sessions') %></span>
-                            </div>
-                          </div>
-                          <div class="actions">
-                            <a href="/dashboard/lessons/<%= lesson.id %>" class="btn btn-sm"><%= t('manage') %></a>
-                            <form method="POST" action="/dashboard/lessons/<%= lesson.id %>/duplicate" style="display:inline;">
-                              <button type="submit" class="btn btn-secondary btn-sm"><%= t('duplicate') %></button>
-                            </form>
-                            <form method="POST" action="/dashboard/lessons/<%= lesson.id %>/delete" onsubmit="return confirm('<%= t('delete_lesson_confirm') %>');" style="display:inline;">
-                              <button type="submit" class="btn btn-danger btn-sm"><%= t('delete') %></button>
-                            </form>
-                          </div>
-                        </div>
-                      </div>
-                    <% }) %>
-                  <% } else { %>
-                    <p style="color:#888;font-style:italic;font-size:0.9rem;"><%= t('no_lessons') %></p>
-                  <% } %>
-                </div>
-              </td>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
-    <% } else { %>
-      <p><%= t('no_courses_yet') %></p>
-    <% } %>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- Edit Course Modal -->
+<div class="modal" id="editModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2><%= t('edit') %></h2>
+      <button class="close-btn" id="closeEditModal">&times;</button>
+    </div>
+    <form method="POST" id="editForm">
+      <div class="form-group">
+        <label for="editTitle"><%= t('course_title') %> *</label>
+        <input type="text" id="editTitle" name="title" required>
+      </div>
+      <div class="form-group">
+        <label for="editShortDescription"><%= t('short_description') %></label>
+        <input type="text" id="editShortDescription" name="shortDescription">
+      </div>
+      <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+        <button type="submit" class="btn"><%= t('save_changes') %></button>
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('editModal').classList.remove('active')"><%= t('cancel') %></button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <script>
-  function toggleEdit(id) {
-    var form = document.getElementById('edit-' + id);
-    if (form) form.classList.toggle('active');
-  }
-
-  // Tutorial logic
+  // Create Modal
   (function() {
-    var overlay = document.getElementById('tutorialOverlay');
-    var showBtn = document.getElementById('showTutorial');
-    var closeBtn = document.getElementById('closeTutorial');
+    var modal = document.getElementById('createModal');
+    document.getElementById('openCreateModal').addEventListener('click', function() { modal.classList.add('active'); });
+    document.getElementById('closeCreateModal').addEventListener('click', function() { modal.classList.remove('active'); });
+    modal.addEventListener('click', function(e) { if (e.target === modal) modal.classList.remove('active'); });
+  })();
 
-    // Show tutorial on first visit (check localStorage)
-    if (!localStorage.getItem('tda_tutorial_seen')) {
-      overlay.classList.add('active');
-    }
-
-    showBtn.addEventListener('click', function() { overlay.classList.add('active'); });
-    closeBtn.addEventListener('click', function() {
-      overlay.classList.remove('active');
-      localStorage.setItem('tda_tutorial_seen', '1');
-    });
-    overlay.addEventListener('click', function(e) {
-      if (e.target === overlay) {
-        overlay.classList.remove('active');
-        localStorage.setItem('tda_tutorial_seen', '1');
-      }
-    });
+  // Edit Modal
+  function openEditModal(id, title, shortDesc) {
+    document.getElementById('editTitle').value = title;
+    document.getElementById('editShortDescription').value = shortDesc;
+    document.getElementById('editForm').action = '/dashboard/' + id + '?_method=PUT';
+    document.getElementById('editModal').classList.add('active');
+  }
+  (function() {
+    var modal = document.getElementById('editModal');
+    document.getElementById('closeEditModal').addEventListener('click', function() { modal.classList.remove('active'); });
+    modal.addEventListener('click', function(e) { if (e.target === modal) modal.classList.remove('active'); });
   })();
 </script>
 

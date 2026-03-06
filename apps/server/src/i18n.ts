@@ -35,6 +35,48 @@ const translations: Record<string, Record<string, string>> = {
 	"login_button": { cs: "Přihlásit se", en: "Log in" },
 	"invalid_credentials": { cs: "Neplatné přihlašovací údaje", en: "Invalid credentials" },
 
+	// Registration
+	"register": { cs: "Registrace", en: "Register" },
+	"register_title": { cs: "Registrace", en: "Registration" },
+	"register_button": { cs: "Zaregistrovat se", en: "Sign up" },
+	"first_name": { cs: "Jméno", en: "First name" },
+	"last_name": { cs: "Příjmení", en: "Last name" },
+	"email": { cs: "E-mail", en: "Email" },
+	"confirm_password": { cs: "Potvrzení hesla", en: "Confirm password" },
+	"accept_terms": { cs: "Souhlasím s", en: "I agree to the" },
+	"terms_and_privacy": { cs: "podmínkami užití a zásadami ochrany osobních údajů", en: "Terms of Use and Privacy Policy" },
+	"already_have_account": { cs: "Již máte účet?", en: "Already have an account?" },
+	"no_account_yet": { cs: "Nemáte účet?", en: "Don't have an account?" },
+	"passwords_not_match": { cs: "Hesla se neshodují", en: "Passwords do not match" },
+	"email_already_exists": { cs: "E-mail je již zaregistrován", en: "Email is already registered" },
+	"registration_success": { cs: "Registrace úspěšná", en: "Registration successful" },
+	"must_accept_terms": { cs: "Musíte souhlasit s podmínkami", en: "You must accept the terms" },
+
+	// Profile
+	"profile": { cs: "Profil", en: "Profile" },
+	"profile_title": { cs: "Můj profil", en: "My Profile" },
+	"full_name": { cs: "Celé jméno", en: "Full name" },
+	"email_address": { cs: "E-mailová adresa", en: "Email address" },
+	"academy_id": { cs: "Academy ID", en: "Academy ID" },
+	"account_status": { cs: "Stav účtu", en: "Account status" },
+	"active": { cs: "Aktivní", en: "Active" },
+	"edit_account_settings": { cs: "Upravit nastavení účtu", en: "Edit account settings" },
+	"not_logged_in": { cs: "Nejste přihlášeni", en: "Not logged in" },
+	"please_login": { cs: "Pro zobrazení profilu se prosím přihlaste", en: "Please log in to view your profile" },
+	"edit_profile": { cs: "Upravit profil", en: "Edit Profile" },
+	"back_to_profile": { cs: "Zpět na profil", en: "Back to profile" },
+	"save_changes": { cs: "Uložit změny", en: "Save changes" },
+	"profile_updated": { cs: "Profil byl úspěšně aktualizován", en: "Profile updated successfully" },
+	"change_password": { cs: "Změnit heslo", en: "Change password" },
+	"current_password": { cs: "Aktuální heslo", en: "Current password" },
+	"new_password": { cs: "Nové heslo", en: "New password" },
+	"leave_blank": { cs: "Ponechte prázdné pro zachování stávajícího", en: "Leave blank to keep current" },
+	"incorrect_password": { cs: "Nesprávné aktuální heslo", en: "Incorrect current password" },
+
+	// About
+	"about": { cs: "O nás", en: "About" },
+	"about_title": { cs: "O aplikaci", en: "About" },
+
 	// Courses
 	"available_courses": { cs: "Dostupné kurzy", en: "Available courses" },
 	"no_courses_found": { cs: "Žádné kurzy nenalezeny.", en: "No courses found." },
