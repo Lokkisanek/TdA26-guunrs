@@ -24,5 +24,5 @@ RUN mkdir -p /app/uploads
 
 EXPOSE 3000
 
-# Run Prisma migrations and start with tsx
-CMD npx prisma migrate deploy && npx tsx src/index.ts
+# Run Prisma sync and start with tsx
+CMD npx prisma db push && npx tsx src/index.ts
