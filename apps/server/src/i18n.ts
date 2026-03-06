@@ -130,6 +130,36 @@ const translations: Record<string, Record<string, string>> = {
 	"no_lessons": { cs: "Žádné lekce. Přidejte první výše.", en: "No lessons. Add first one above." },
 	"no_courses_yet": { cs: "Zatím nejsou žádné kurzy. Přidejte první kurz výše.", en: "No courses yet. Add the first course above." },
 
+	// User management
+	"user_management": { cs: "Správa uživatelů", en: "User management" },
+	"user_management_desc": { cs: "Přehled registrovaných uživatelů. Můžete z nich udělat lektory, kteří budou moci spravovat vlastní kurzy.", en: "Overview of registered users. You can promote them to lecturers who can manage their own courses." },
+	"registered": { cs: "Registrován", en: "Registered" },
+	"role": { cs: "Role", en: "Role" },
+	"lecturer": { cs: "Lektor", en: "Lecturer" },
+	"student": { cs: "Student", en: "Student" },
+	"make_lecturer": { cs: "Udělat lektorem", en: "Make lecturer" },
+	"revoke_lecturer": { cs: "Odebrat lektora", en: "Revoke lecturer" },
+	"revoke_lecturer_confirm": { cs: "Opravdu odebrat roli lektora?", en: "Really revoke lecturer role?" },
+	"no_users_yet": { cs: "Zatím nejsou žádní registrovaní uživatelé.", en: "No registered users yet." },
+	"manage_users": { cs: "Správa uživatelů", en: "Manage users" },
+
+	// Course visibility
+	"course_visibility": { cs: "Viditelnost kurzu", en: "Course visibility" },
+	"current_state": { cs: "Aktuální", en: "Current" },
+	"in_preparation": { cs: "V přípravě", en: "In preparation" },
+	"open_live": { cs: "Otevřený / Živý", en: "Open / Live" },
+	"temporarily_closed": { cs: "Dočasně uzavřeno", en: "Temporarily closed" },
+	"schedule_state_change": { cs: "Volitelně naplánovat změnu stavu", en: "Optionally schedule state change" },
+	"apply_now": { cs: "Aplikovat nyní", en: "Apply now" },
+	"vis_preparation": { cs: "Příprava", en: "Preparation" },
+	"vis_live": { cs: "Živý", en: "Live" },
+	"vis_closed": { cs: "Uzavřeno", en: "Closed" },
+
+	// Course statistics
+	"course_statistics": { cs: "Statistiky kurzu", en: "Course statistics" },
+	"stats_description": { cs: "Přehled kurzu a export všech dat včetně výsledků kvízů a relací do CSV.", en: "Course overview and export of all data including quiz results and sessions to CSV." },
+	"download_stats_csv": { cs: "Stáhnout statistiky (CSV)", en: "Download statistics (CSV)" },
+
 	// Lesson management
 	"add_page": { cs: "Přidat stránku", en: "Add page" },
 	"page_title": { cs: "Název stránky", en: "Page title" },

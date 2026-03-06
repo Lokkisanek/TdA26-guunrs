@@ -1,0 +1,76 @@
+<%- include('partials/header', { title: t('user_management') }) %>
+<style>
+  h1 { color: var(--brand-blue-dark); margin-bottom: 0.25rem; }
+  .user-table { width: 100%; border-collapse: collapse; }
+  .user-table th, .user-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #eee; }
+  .user-table th { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #888; }
+  .user-table tr:hover { background: #f8f9fa; }
+  .role-badge { display: inline-block; padding: 0.15rem 0.5rem; font-size: 0.75rem; font-weight: 700; border-radius: 4px; }
+  .role-admin { background: #667eea; color: #fff; }
+  .role-lecturer { background: #28a745; color: #fff; }
+  .role-student { background: #e9ecef; color: #555; }
+  @media (max-width: 768px) {
+    .user-table th:nth-child(3), .user-table td:nth-child(3) { display: none; }
+  }
+</style>
+
+<div class="container">
+  <a href="/profile" class="back-link">&larr; <%= t('back_to_profile') %></a>
+  <h1><%= t('user_management') %></h1>
+  <p style="color:#666; margin-bottom:1.5rem;"><%= t('user_management_desc') %></p>
+
+  <div class="card" style="border-top:6px solid var(--brand-primary); overflow-x:auto;">
+    <% if (users && users.length > 0) { %>
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th><%= t('full_name').toUpperCase() %></th>
+          <th><%= t('email').toUpperCase() %></th>
+          <th><%= t('registered').toUpperCase() %></th>
+          <th><%= t('role').toUpperCase() %></th>
+          <th><%= t('actions').toUpperCase() %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% users.forEach(function(u) { %>
+        <tr>
+          <td style="font-weight:600;"><%= u.firstName %> <%= u.lastName %></td>
+          <td><a href="mailto:<%= u.email %>" style="color:var(--brand-primary); text-decoration:none;"><%= u.email %></a></td>
+          <td style="font-size:0.85rem; color:#888;"><%= new Date(u.createdAt).toLocaleDateString(lang === 'en' ? 'en-US' : 'cs-CZ') %></td>
+          <td>
+            <% if (u.isAdmin) { %>
+              <span class="role-badge role-admin">Admin</span>
+            <% } else if (u.isLecturer) { %>
+              <span class="role-badge role-lecturer"><%= t('lecturer') %></span>
+            <% } else { %>
+              <span class="role-badge role-student"><%= t('student') %></span>
+            <% } %>
+          </td>
+          <td>
+            <% if (!u.isAdmin) { %>
+              <% if (u.isLecturer) { %>
+                <form method="POST" action="/dashboard/users/<%= u.id %>/role" style="display:inline;">
+                  <input type="hidden" name="isLecturer" value="false">
+                  <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('<%= t('revoke_lecturer_confirm') %>');"><%= t('revoke_lecturer') %></button>
+                </form>
+              <% } else { %>
+                <form method="POST" action="/dashboard/users/<%= u.id %>/role" style="display:inline;">
+                  <input type="hidden" name="isLecturer" value="true">
+                  <button type="submit" class="btn btn-sm"><%= t('make_lecturer') %></button>
+                </form>
+              <% } %>
+            <% } else { %>
+              <span style="color:#888; font-size:0.8rem;">-</span>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <% } else { %>
+      <p style="color:#888; font-style:italic;"><%= t('no_users_yet') %></p>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

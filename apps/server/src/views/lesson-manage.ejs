@@ -21,7 +21,7 @@
 <!-- Add Page -->
 <div class="card">
   <h2><%= t('add_page') %></h2>
-  <form method="POST" action="/dashboard/lessons/<%= lesson.id %>/pages">
+  <form method="POST" action="/dashboard/lessons/<%= lesson.id %>/pages" id="addPageForm">
     <div class="form-row">
       <div class="form-group">
         <label for="pageTitle"><%= t('page_title') %> *</label>
@@ -29,7 +29,7 @@
       </div>
       <div class="form-group">
         <label for="pageType"><%= t('page_type') %></label>
-        <select id="pageType" name="type">
+        <select id="pageType" name="type" onchange="toggleContentFields()">
           <option value="text"><%= t('text') %></option>
           <option value="video"><%= t('video') %></option>
           <option value="quiz"><%= t('quiz') %></option>
@@ -37,34 +37,209 @@
         </select>
       </div>
     </div>
-    <div class="form-group">
+
+    <!-- Content for non-quiz types -->
+    <div class="form-group" id="contentField">
       <label for="pageContent"><%= t('content_html') %></label>
       <textarea id="pageContent" name="content"></textarea>
     </div>
-    <div class="form-group">
-      <label><input type="checkbox" name="isPublished" value="true" checked> <%= t('published') %></label>
+
+    <!-- Quiz mode selector -->
+    <div id="quizModeField" style="display:none;">
+      <div style="display:flex;gap:1rem;margin-bottom:1rem;">
+        <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;padding:.5rem 1rem;border:2px solid #e0e0e0;border-radius:6px;font-size:.9rem;" id="quizModeBuilderLabel">
+          <input type="radio" name="quizMode" value="builder" checked onchange="toggleQuizMode()"> <%= lang === 'en' ? 'Quiz Builder' : 'Editor kvízu' %>
+        </label>
+        <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;padding:.5rem 1rem;border:2px solid #e0e0e0;border-radius:6px;font-size:.9rem;" id="quizModeJsonLabel">
+          <input type="radio" name="quizMode" value="json" onchange="toggleQuizMode()"> JSON import
+        </label>
+      </div>
+
+      <!-- JSON import -->
+      <div class="form-group" id="quizJsonField" style="display:none;">
+        <label><%= lang === 'en' ? 'Quiz JSON' : 'JSON kvízu' %></label>
+        <textarea id="quizJsonContent" rows="6" placeholder='{"questions":[{"text":"...","options":[{"label":"A","value":0}],"correctAnswer":0}]}'></textarea>
+      </div>
+
+      <!-- Quiz builder -->
+      <div id="quizBuilderField">
+        <div id="questionsList"></div>
+        <button type="button" class="btn btn-secondary" onclick="addQuestion()" style="margin-top:.5rem;">+ <%= lang === 'en' ? 'Add question' : 'Přidat otázku' %></button>
+      </div>
     </div>
+
+    <input type="hidden" name="content" id="hiddenContent" disabled>
     <button type="submit" class="btn"><%= t('add_page') %></button>
   </form>
 </div>
+
+<style>
+  .quiz-question-block { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin-bottom: .75rem; position: relative; }
+  .quiz-question-block .q-header { display: flex; align-items: center; gap: .75rem; margin-bottom: .75rem; }
+  .quiz-question-block .q-header .q-num { font-weight: 700; color: var(--brand-primary); font-size: 1rem; min-width: 24px; }
+  .quiz-question-block .q-header input { flex: 1; }
+  .quiz-question-block .q-remove { position: absolute; top: .5rem; right: .5rem; background: none; border: none; color: #dc3545; font-size: 1.2rem; cursor: pointer; padding: .25rem; line-height: 1; }
+  .quiz-question-block .q-remove:hover { color: #a71d2a; }
+  .quiz-option-row { display: flex; align-items: center; gap: .5rem; margin-bottom: .35rem; }
+  .quiz-option-row input[type="text"] { flex: 1; padding: .4rem .6rem; font-size: .9rem; }
+  .quiz-option-row input[type="radio"] { width: 18px; height: 18px; }
+  .quiz-option-row .opt-remove { background: none; border: none; color: #999; cursor: pointer; font-size: 1rem; padding: .15rem .35rem; }
+  .quiz-option-row .opt-remove:hover { color: #dc3545; }
+  .add-option-btn { background: none; border: 1px dashed #ccc; color: #888; font-size: .85rem; padding: .3rem .75rem; cursor: pointer; border-radius: 4px; margin-top: .25rem; }
+  .add-option-btn:hover { border-color: var(--brand-primary); color: var(--brand-primary); }
+  .correct-hint { font-size: .75rem; color: #888; margin-bottom: .5rem; }
+</style>
+
+<script>
+var questionCount = 0;
+
+function toggleContentFields() {
+  var type = document.getElementById('pageType').value;
+  var contentField = document.getElementById('contentField');
+  var quizModeField = document.getElementById('quizModeField');
+  var pageContent = document.getElementById('pageContent');
+  var hiddenContent = document.getElementById('hiddenContent');
+
+  if (type === 'quiz') {
+    contentField.style.display = 'none';
+    pageContent.name = '';
+    pageContent.disabled = true;
+    quizModeField.style.display = 'block';
+    if (questionCount === 0) addQuestion();
+  } else {
+    contentField.style.display = '';
+    pageContent.name = 'content';
+    pageContent.disabled = false;
+    quizModeField.style.display = 'none';
+    hiddenContent.disabled = true;
+  }
+}
+
+function toggleQuizMode() {
+  var mode = document.querySelector('input[name="quizMode"]:checked').value;
+  document.getElementById('quizBuilderField').style.display = mode === 'builder' ? '' : 'none';
+  document.getElementById('quizJsonField').style.display = mode === 'json' ? '' : 'none';
+  document.getElementById('quizModeBuilderLabel').style.borderColor = mode === 'builder' ? 'var(--brand-primary)' : '#e0e0e0';
+  document.getElementById('quizModeJsonLabel').style.borderColor = mode === 'json' ? 'var(--brand-primary)' : '#e0e0e0';
+}
+
+function addQuestion() {
+  questionCount++;
+  var idx = questionCount;
+  var div = document.createElement('div');
+  div.className = 'quiz-question-block';
+  div.id = 'qBlock_' + idx;
+  div.innerHTML =
+    '<button type="button" class="q-remove" onclick="removeQuestion(' + idx + ')" title="Remove">&times;</button>' +
+    '<div class="q-header"><span class="q-num">' + idx + '.</span>' +
+    '<input type="text" placeholder="<%= lang === "en" ? "Question text" : "Text otázky" %>" id="qText_' + idx + '" required></div>' +
+    '<div class="correct-hint"><%= lang === "en" ? "Select the correct answer" : "Vyberte správnou odpověď" %></div>' +
+    '<div id="qOptions_' + idx + '"></div>' +
+    '<button type="button" class="add-option-btn" onclick="addOption(' + idx + ')">+ <%= lang === "en" ? "Add option" : "Přidat možnost" %></button>';
+  document.getElementById('questionsList').appendChild(div);
+  addOption(idx);
+  addOption(idx);
+  renumberQuestions();
+}
+
+function removeQuestion(idx) {
+  var block = document.getElementById('qBlock_' + idx);
+  if (block) block.remove();
+  renumberQuestions();
+}
+
+function renumberQuestions() {
+  var blocks = document.querySelectorAll('#questionsList .quiz-question-block');
+  blocks.forEach(function(b, i) {
+    var num = b.querySelector('.q-num');
+    if (num) num.textContent = (i + 1) + '.';
+  });
+}
+
+function addOption(qIdx) {
+  var container = document.getElementById('qOptions_' + qIdx);
+  if (!container) return;
+  var optIdx = container.children.length;
+  var row = document.createElement('div');
+  row.className = 'quiz-option-row';
+  row.innerHTML =
+    '<input type="radio" name="qCorrect_' + qIdx + '" value="' + optIdx + '"' + (optIdx === 0 ? ' checked' : '') + '>' +
+    '<input type="text" placeholder="<%= lang === "en" ? "Option" : "Možnost" %> ' + String.fromCharCode(65 + optIdx) + '" required>' +
+    '<button type="button" class="opt-remove" onclick="removeOption(this, ' + qIdx + ')">&times;</button>';
+  container.appendChild(row);
+}
+
+function removeOption(btn, qIdx) {
+  var container = document.getElementById('qOptions_' + qIdx);
+  btn.closest('.quiz-option-row').remove();
+  // re-index radio values and check first if needed
+  var rows = container.querySelectorAll('.quiz-option-row');
+  var anyChecked = false;
+  rows.forEach(function(r, i) {
+    var radio = r.querySelector('input[type="radio"]');
+    radio.value = i;
+    if (radio.checked) anyChecked = true;
+    var input = r.querySelector('input[type="text"]');
+    input.placeholder = '<%= lang === "en" ? "Option" : "Možnost" %> ' + String.fromCharCode(65 + i);
+  });
+  if (!anyChecked && rows.length > 0) rows[0].querySelector('input[type="radio"]').checked = true;
+}
+
+document.getElementById('addPageForm').addEventListener('submit', function(e) {
+  var type = document.getElementById('pageType').value;
+  if (type !== 'quiz') return;
+
+  var mode = document.querySelector('input[name="quizMode"]:checked').value;
+  var hiddenContent = document.getElementById('hiddenContent');
+
+  if (mode === 'json') {
+    var jsonText = document.getElementById('quizJsonContent').value.trim();
+    if (!jsonText) { e.preventDefault(); alert('<%= lang === "en" ? "Please enter quiz JSON" : "Zadejte JSON kvízu" %>'); return; }
+    try { JSON.parse(jsonText); } catch(err) { e.preventDefault(); alert('<%= lang === "en" ? "Invalid JSON format" : "Neplatný formát JSON" %>'); return; }
+    hiddenContent.disabled = false;
+    hiddenContent.value = jsonText;
+  } else {
+    // Build JSON from builder
+    var questions = [];
+    var blocks = document.querySelectorAll('#questionsList .quiz-question-block');
+    if (blocks.length === 0) { e.preventDefault(); alert('<%= lang === "en" ? "Add at least one question" : "Přidejte alespoň jednu otázku" %>'); return; }
+    var valid = true;
+    blocks.forEach(function(block, i) {
+      var textInput = block.querySelector('.q-header input[type="text"]');
+      var text = textInput ? textInput.value.trim() : '';
+      if (!text) { valid = false; return; }
+      var optRows = block.querySelectorAll('.quiz-option-row');
+      var options = [];
+      var correctAnswer = 0;
+      optRows.forEach(function(row, j) {
+        var label = row.querySelector('input[type="text"]').value.trim();
+        if (!label) valid = false;
+        options.push({ label: label, value: j });
+        if (row.querySelector('input[type="radio"]').checked) correctAnswer = j;
+      });
+      if (options.length < 2) valid = false;
+      questions.push({ id: i, text: text, options: options, correctAnswer: correctAnswer });
+    });
+    if (!valid) { e.preventDefault(); alert('<%= lang === "en" ? "Fill in all question fields (at least 2 options each)" : "Vyplňte všechna pole otázek (alespoň 2 možnosti)" %>'); return; }
+    hiddenContent.disabled = false;
+    hiddenContent.value = JSON.stringify({ questions: questions });
+  }
+});
+</script>
 
 <!-- Pages List -->
 <div class="card">
   <h2><%= t('lesson_pages') %> (<%= lesson.pages.length %>)</h2>
   <% if (lesson.pages.length > 0) { %>
     <table>
-      <thead><tr><th>#</th><th><%= t('title') %></th><th><%= t('page_type') %></th><th><%= t('state') %></th><th><%= t('actions') %></th></tr></thead>
+      <thead><tr><th>#</th><th><%= t('title') %></th><th><%= t('page_type') %></th><th><%= t('actions') %></th></tr></thead>
       <tbody>
         <% lesson.pages.forEach(function(page, i) { %>
           <tr>
             <td><%= i + 1 %></td>
             <td><%= page.title %></td>
             <td><span class="badge badge-type"><%= page.type %></span></td>
-            <td><span class="badge <%= page.isPublished ? 'badge-published' : 'badge-draft' %>"><%= page.isPublished ? t('published') : t('draft') %></span></td>
             <td class="actions">
-              <form method="POST" action="/dashboard/pages/<%= page.id %>/toggle-publish">
-                <button type="submit" class="btn btn-sm btn-warning"><%= page.isPublished ? t('hide') : t('publish') %></button>
-              </form>
               <form method="POST" action="/dashboard/pages/<%= page.id %>/delete" onsubmit="return confirm('<%= t('delete_page_confirm') %>');">
                 <button type="submit" class="btn btn-sm btn-danger"><%= t('delete') %></button>
               </form>

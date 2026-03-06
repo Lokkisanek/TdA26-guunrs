@@ -12,6 +12,10 @@ model Course {
   title            String
   shortDescription String
   description      String?
+  visibility       String   @default("PREPARATION")
+  scheduledChange  String?
+  scheduledAt      DateTime?
+  ownerId          String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   feedEntries      FeedEntry[]
@@ -89,12 +93,13 @@ model QuizResult {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  firstName String
-  lastName  String
-  email     String   @unique
-  password  String
-  isAdmin   Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(uuid())
+  firstName  String
+  lastName   String
+  email      String   @unique
+  password   String
+  isAdmin    Boolean  @default(false)
+  isLecturer Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }

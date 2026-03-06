@@ -7,6 +7,7 @@ declare module "express-session" {
       firstName?: string;
       lastName?: string;
       isAdmin?: boolean;
+      isLecturer?: boolean;
     };
     userId?: string;
     returnTo?: string;

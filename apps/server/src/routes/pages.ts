@@ -306,15 +306,19 @@ router
 router.get("/courses", async (req, res, next) => {
   try {
     const search = req.query.search?.toString().trim() ?? "";
+    const isAdmin = req.session.user?.isAdmin;
+    const isLecturer = req.session.user?.isLecturer;
+    const visibilityFilter = (isAdmin || isLecturer) ? {} : { visibility: "LIVE" };
     const courses = await req.prisma.course.findMany({
       where: search
         ? {
+            ...visibilityFilter,
             OR: [
               { title: { contains: search } },
               { shortDescription: { contains: search } },
             ],
           }
-        : undefined,
+        : visibilityFilter,
       orderBy: { createdAt: "desc" },
     });
 
@@ -364,6 +368,12 @@ router.get("/courses/:id", async (req, res, next) => {
       },
     });
     const lang = res.locals.lang;
+    const isAdmin = req.session.user?.isAdmin;
+    const isLecturer = req.session.user?.isLecturer;
+    // Hide non-LIVE courses from public users
+    if (course && course.visibility !== "LIVE" && !isAdmin && !isLecturer) {
+      return res.status(404).render("course-detail", { title: t("course_not_found", lang), course: null });
+    }
     const seo: Record<string, any> = {
       title: course ? course.title : t("course_not_found", lang),
       course,
@@ -431,8 +441,9 @@ router
           firstName: user.firstName,
           lastName: user.lastName,
           isAdmin: user.isAdmin,
+          isLecturer: (user as any).isLecturer || false,
         };
-        const redirectTo = req.session.returnTo || (user.isAdmin ? "/dashboard" : "/courses");
+        const redirectTo = req.session.returnTo || (user.isAdmin || (user as any).isLecturer ? "/dashboard" : "/courses");
         delete req.session.returnTo;
         return res.redirect(redirectTo);
       }
@@ -453,10 +464,46 @@ router.post("/logout", isAuthenticated, (req, res) => {
   });
 });
 
+// ──────────── USER MANAGEMENT ────────────
+router.get("/dashboard/users", isAuthenticated, async (req, res, next) => {
+  try {
+    if (!req.session.user?.isAdmin) return res.redirect("/dashboard");
+    const users = await req.prisma.user.findMany({ orderBy: { createdAt: "desc" } });
+    res.render("user-management", { title: t("user_management", res.locals.lang), users, noIndex: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/dashboard/users/:id/role", isAuthenticated, async (req, res, next) => {
+  try {
+    if (!req.session.user?.isAdmin) return res.redirect("/dashboard");
+    const isLecturer = req.body.isLecturer === "true";
+    await req.prisma.user.update({
+      where: { id: req.params.id },
+      data: { isLecturer },
+    });
+    res.redirect("/dashboard/users");
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ──────────── DASHBOARD ────────────
 router.get("/dashboard", isAuthenticated, async (req, res, next) => {
   try {
+    const isAdmin = req.session.user?.isAdmin;
+    const isLecturer = req.session.user?.isLecturer;
+    const userId = req.session.userId;
+
+    // Only admin and lecturers can access the dashboard
+    if (!isAdmin && !isLecturer) return res.redirect("/courses");
+
+    // Lecturers only see their own courses; admin sees all
+    const whereClause = (isAdmin) ? {} : { ownerId: userId || "__none__" };
+
     const courses = await req.prisma.course.findMany({
+      where: whereClause,
       orderBy: { createdAt: "desc" },
       include: {
         lessons: {
@@ -475,7 +522,7 @@ router.post("/dashboard", isAuthenticated, async (req, res, next) => {
   try {
     const { title, shortDescription, description } = req.body;
     await req.prisma.course.create({
-      data: { title, shortDescription, description: description || null },
+      data: { title, shortDescription, description: description || null, ownerId: req.session.userId || null },
     });
     res.redirect("/dashboard");
   } catch (error) {
@@ -505,6 +552,130 @@ router.delete("/dashboard/:id", isAuthenticated, async (req, res, next) => {
   }
 });
 
+// ──────────── COURSE EDITOR ────────────
+router.get("/dashboard/edit/courses/:id", isAuthenticated, async (req, res, next) => {
+  try {
+    const course = await req.prisma.course.findUnique({
+      where: { id: req.params.id },
+      include: {
+        lessons: {
+          orderBy: { order: "asc" },
+          include: {
+            _count: { select: { pages: true, liveSessions: true } },
+            liveSessions: { orderBy: { createdAt: "desc" } },
+          },
+        },
+      },
+    });
+    if (!course) return res.status(404).render("error", { title: t("error", res.locals.lang), message: t("course_not_found", res.locals.lang) });
+    res.render("course-edit", { title: `${t("edit", res.locals.lang)}: ${course.title}`, course, noIndex: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/dashboard/edit/courses/:id", isAuthenticated, async (req, res, next) => {
+  try {
+    const { title, shortDescription, description } = req.body;
+    await req.prisma.course.update({
+      where: { id: req.params.id },
+      data: { title, shortDescription, description: description || null },
+    });
+    res.redirect(`/dashboard/edit/courses/${req.params.id}`);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/dashboard/edit/courses/:id/visibility", isAuthenticated, async (req, res, next) => {
+  try {
+    const { visibility, scheduleEnabled, scheduledAt, scheduledChange } = req.body;
+    const data: any = { visibility: visibility || "PREPARATION" };
+    if (scheduleEnabled && scheduledAt && scheduledChange) {
+      data.scheduledAt = new Date(scheduledAt);
+      data.scheduledChange = scheduledChange;
+    } else {
+      data.scheduledAt = null;
+      data.scheduledChange = null;
+    }
+    await req.prisma.course.update({
+      where: { id: req.params.id },
+      data,
+    });
+    res.redirect(`/dashboard/edit/courses/${req.params.id}`);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ──────────── COURSE STATISTICS EXPORT ────────────
+router.get("/dashboard/edit/courses/:id/stats.csv", isAuthenticated, async (req, res, next) => {
+  try {
+    const course = await req.prisma.course.findUnique({
+      where: { id: req.params.id },
+      include: {
+        lessons: {
+          orderBy: { order: "asc" },
+          include: {
+            pages: { orderBy: { order: "asc" } },
+            liveSessions: {
+              include: {
+                quizResults: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!course) return res.status(404).send("Not found");
+
+    const rows: string[][] = [];
+    rows.push(["Lesson", "Session ID", "Session State", "Started At", "Ended At", "Student ID", "Quiz Page", "Score", "Submitted At"]);
+
+    for (const lesson of course.lessons) {
+      if (lesson.liveSessions.length === 0) {
+        rows.push([lesson.title, "", "", "", "", "", "", "", ""]);
+        continue;
+      }
+      for (const session of lesson.liveSessions) {
+        if (session.quizResults.length === 0) {
+          rows.push([
+            lesson.title,
+            session.id,
+            session.currentState,
+            session.startedAt ? new Date(session.startedAt).toISOString() : "",
+            session.endedAt ? new Date(session.endedAt).toISOString() : "",
+            "", "", "", "",
+          ]);
+          continue;
+        }
+        for (const qr of session.quizResults) {
+          const page = lesson.pages.find((p: any) => p.id === qr.lessonPageId);
+          rows.push([
+            lesson.title,
+            session.id,
+            session.currentState,
+            session.startedAt ? new Date(session.startedAt).toISOString() : "",
+            session.endedAt ? new Date(session.endedAt).toISOString() : "",
+            qr.studentId,
+            page ? page.title : qr.lessonPageId,
+            String(qr.score),
+            new Date(qr.submittedAt).toISOString(),
+          ]);
+        }
+      }
+    }
+
+    const csv = rows.map(r => r.map(c => `"${(c || "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const filename = `${course.title.replace(/[^a-zA-Z0-9]/g, "_")}_stats.csv`;
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send("\uFEFF" + csv); // BOM for Excel compat
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ──────────── LESSON MANAGEMENT (Dashboard) ────────────
 
 // Create lesson for a course
@@ -523,6 +694,10 @@ router.post("/dashboard/courses/:courseId/lessons", isAuthenticated, async (req,
         order: (maxOrder._max.order ?? -1) + 1,
       },
     });
+    const referer = req.get("Referer") || "";
+    if (referer.includes("/dashboard/edit/courses/")) {
+      return res.redirect(referer);
+    }
     res.redirect("/dashboard");
   } catch (error) {
     next(error);
@@ -561,6 +736,10 @@ router.post("/dashboard/lessons/:id/duplicate", isAuthenticated, async (req, res
         liveSessions: { create: { currentState: "DRAFT" } },
       },
     });
+    const referer = req.get("Referer") || "";
+    if (referer.includes("/dashboard/edit/courses/")) {
+      return res.redirect(referer);
+    }
     res.redirect("/dashboard");
   } catch (error) {
     next(error);
@@ -570,7 +749,12 @@ router.post("/dashboard/lessons/:id/duplicate", isAuthenticated, async (req, res
 // Delete lesson
 router.post("/dashboard/lessons/:id/delete", isAuthenticated, async (req, res, next) => {
   try {
+    const lesson = await req.prisma.lesson.findUnique({ where: { id: req.params.id }, select: { courseId: true } });
     await req.prisma.lesson.delete({ where: { id: req.params.id } });
+    const referer = req.get("Referer") || "";
+    if (referer.includes("/dashboard/edit/courses/") && lesson) {
+      return res.redirect(`/dashboard/edit/courses/${lesson.courseId}`);
+    }
     res.redirect("/dashboard");
   } catch (error) {
     next(error);
@@ -598,7 +782,7 @@ router.get("/dashboard/lessons/:id", isAuthenticated, async (req, res, next) => 
 // Add page to lesson
 router.post("/dashboard/lessons/:lessonId/pages", isAuthenticated, async (req, res, next) => {
   try {
-    const { title, content, type, isPublished } = req.body;
+    const { title, content, type } = req.body;
     const maxOrder = await req.prisma.lessonPage.aggregate({
       where: { lessonId: req.params.lessonId },
       _max: { order: true },
@@ -610,10 +794,11 @@ router.post("/dashboard/lessons/:lessonId/pages", isAuthenticated, async (req, r
         content: content || null,
         type: type || "text",
         order: (maxOrder._max.order ?? -1) + 1,
-        isPublished: isPublished === "true" || isPublished === true,
+        isPublished: true,
       },
     });
-    res.redirect(`/dashboard/lessons/${req.params.lessonId}`);
+    const referer = req.headers.referer || `/dashboard/lessons/${req.params.lessonId}`;
+    res.redirect(referer);
   } catch (error) {
     next(error);
   }

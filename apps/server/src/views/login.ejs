@@ -1,38 +1,75 @@
 <%- include('partials/header', { title: t('login_title') }) %>
 <style>
-  body { background: var(--brand-primary); }
+  body { background: #f0f4f8; }
   .main { display: flex; align-items: center; justify-content: center; padding: 2rem 0; }
-  .login-container { background: #ffffff; padding: 3rem 2.25rem; border-radius: 0; box-shadow: none; width: 100%; max-width: 460px; border-top: 6px solid var(--brand-blue-dark); }
-  .login-container h1 { text-align: center; color: var(--brand-blue-dark); margin-bottom: 1.25rem; font-size: 1.6rem; }
-  .login-btn { width: 100%; padding: 1rem; background: var(--brand-primary); color: white; border: 2px solid rgba(0,0,0,0.06); border-radius: 0; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: filter 0.12s ease; }
-  .login-btn:hover { filter: brightness(1.04); }
-  @media (max-width: 480px) { .login-container { padding: 1.5rem; margin: 1rem; } }
+  .login-wrapper {
+    width: 100%; max-width: 900px; display: flex; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  }
+  .login-side {
+    flex: 1; background: linear-gradient(135deg, var(--brand-blue-dark) 0%, var(--brand-primary) 40%, var(--brand-accent) 70%, var(--brand-teal) 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 2rem; color: #fff; text-align: center;
+  }
+  .login-side img { width: 180px; margin-bottom: 1.25rem; }
+  .login-side p { font-size: .95rem; opacity: .85; line-height: 1.5; max-width: 260px; }
+  .login-container {
+    flex: 1; background: #ffffff; padding: 3rem 2.5rem; display: flex; flex-direction: column; justify-content: center;
+  }
+  .login-container h1 { color: var(--brand-blue-dark); margin-bottom: 1.5rem; font-size: 1.6rem; }
+  .login-container label { color: #555; font-weight: 600; font-size: .85rem; text-transform: uppercase; letter-spacing: .03em; margin-bottom: .25rem; display: block; }
+  .login-container input[type="text"],
+  .login-container input[type="password"] {
+    width: 100%; padding: .75rem .85rem; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem;
+    font-family: inherit; transition: border-color .2s ease; background: #fafbfc;
+  }
+  .login-container input:focus { border-color: var(--brand-primary); outline: none; background: #fff; }
+  .login-btn {
+    width: 100%; padding: 1rem; border: none; border-radius: 6px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; font-family: inherit; color: #fff;
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-accent));
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .login-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,112,187,0.3); }
+  .login-btn:active { transform: translateY(0); }
+  .login-links { text-align: center; margin-top: 1.25rem; font-size: .9rem; color: #888; }
+  .login-links a { color: var(--brand-primary); font-weight: 700; text-decoration: none; }
+  .login-links a:hover { text-decoration: underline; }
+  @media (max-width: 680px) {
+    .login-wrapper { flex-direction: column; max-width: 460px; }
+    .login-side { padding: 2rem 1.5rem; }
+    .login-container { padding: 2rem 1.5rem; }
+  }
 </style>
 
-<div class="login-container">
-  <h1><%= t('login_title') %></h1>
+<div class="login-wrapper">
+  <div class="login-side">
+    <img src="/img/Think-different-Academy_LOGO_oficialni-bile.svg" alt="Think different Academy">
+    <p>Vzdělávací platforma pro interaktivní výuku</p>
+  </div>
+  <div class="login-container">
+    <h1><%= t('login_title') %></h1>
 
-  <% if (error) { %>
-    <div class="error"><%= error %></div>
-  <% } %>
+    <% if (error) { %>
+      <div class="error" style="background:#fef2f2;color:#b91c1c;padding:.75rem 1rem;border-radius:6px;margin-bottom:1rem;font-size:.9rem;border-left:4px solid #b91c1c;"><%= error %></div>
+    <% } %>
 
-  <form method="POST" action="/login">
-    <div class="form-group" style="margin-bottom: 1rem;">
-      <label for="username"><%= t('username') %></label>
-      <input type="text" id="username" name="username" required>
+    <form method="POST" action="/login">
+      <div class="form-group" style="margin-bottom: 1.1rem;">
+        <label for="username"><%= t('username') %></label>
+        <input type="text" id="username" name="username" required>
+      </div>
+      <div class="form-group" style="margin-bottom: 1.5rem;">
+        <label for="password"><%= t('password') %></label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <button type="submit" class="login-btn"><%= t('login_button') %></button>
+    </form>
+
+    <div class="login-links">
+      <p><%= t('no_account_yet') %> <a href="/register"><%= t('register') %></a></p>
+      <p style="margin-top:.5rem;"><a href="/" style="color:#888;font-weight:400;">&larr; <%= t('back_to_home') %></a></p>
     </div>
-    <div class="form-group" style="margin-bottom: 1.25rem;">
-      <label for="password"><%= t('password') %></label>
-      <input type="password" id="password" name="password" required>
-    </div>
-    <button type="submit" class="login-btn"><%= t('login_button') %></button>
-  </form>
-
-  <p style="text-align:center;margin-top:1.25rem;color:#666;">
-    <%= t('no_account_yet') %> <a href="/register" style="color:var(--brand-primary);font-weight:700;"><%= t('register') %></a>
-  </p>
-
-  <a href="/" class="back-link" style="display:block;text-align:center;margin-top:1rem;">&larr; <%= t('back_to_home') %></a>
+  </div>
 </div>
 
 <%- include('partials/footer') %>

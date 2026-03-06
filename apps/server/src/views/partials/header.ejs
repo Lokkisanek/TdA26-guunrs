@@ -97,8 +97,11 @@
           <a href="?lang=en" class="lang-btn <%= typeof lang !== 'undefined' && lang === 'en' ? 'active' : '' %>" title="English">EN</a>
         </div>
         <% if (user) { %>
-          <% if (user.isAdmin) { %>
+          <% if (user.isAdmin || user.isLecturer) { %>
             <a href="/dashboard">Dashboard</a>
+          <% } %>
+          <% if (user.isAdmin) { %>
+            <a href="/dashboard/users"><%= typeof lang !== 'undefined' && lang === 'en' ? 'Users' : 'Uživatelé' %></a>
           <% } %>
           <a href="/profile"><%= typeof lang !== 'undefined' && lang === 'en' ? 'Profile' : 'Profil' %></a>
           <form method="post" action="/logout">

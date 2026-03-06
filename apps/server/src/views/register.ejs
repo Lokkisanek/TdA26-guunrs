@@ -1,73 +1,109 @@
 <%- include('partials/header', { title: t('register_title') }) %>
 <style>
-  body { background: var(--brand-primary); }
+  body { background: #f0f4f8; }
   .main { display: flex; align-items: center; justify-content: center; padding: 2rem 0; }
-  .register-container { background: #ffffff; padding: 3rem 2.25rem; border-radius: 0; box-shadow: none; width: 100%; max-width: 500px; border-top: 6px solid var(--brand-blue-dark); }
-  .register-container h1 { text-align: center; color: var(--brand-blue-dark); margin-bottom: 1.25rem; font-size: 1.6rem; }
-  .register-btn { width: 100%; padding: 1rem; background: var(--brand-primary); color: white; border: 2px solid rgba(0,0,0,0.06); border-radius: 0; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: filter 0.12s ease; }
-  .register-btn:hover { filter: brightness(1.04); }
-  .register-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .reg-wrapper {
+    width: 100%; max-width: 960px; display: flex; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  }
+  .reg-side {
+    flex: 0 0 280px; background: linear-gradient(135deg, var(--brand-blue-dark) 0%, var(--brand-primary) 40%, var(--brand-accent) 70%, var(--brand-teal) 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 2rem; color: #fff; text-align: center;
+  }
+  .reg-side img { width: 180px; margin-bottom: 1.25rem; }
+  .reg-side p { font-size: .95rem; opacity: .85; line-height: 1.5; max-width: 260px; }
+  .register-container {
+    flex: 1; background: #ffffff; padding: 2.5rem 2.5rem; display: flex; flex-direction: column; justify-content: center;
+  }
+  .register-container h1 { color: var(--brand-blue-dark); margin-bottom: 1.25rem; font-size: 1.6rem; }
+  .register-container label { color: #555; font-weight: 600; font-size: .85rem; text-transform: uppercase; letter-spacing: .03em; margin-bottom: .25rem; display: block; }
+  .register-container input[type="text"],
+  .register-container input[type="email"],
+  .register-container input[type="password"] {
+    width: 100%; padding: .65rem .85rem; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem;
+    font-family: inherit; transition: border-color .2s ease; background: #fafbfc;
+  }
+  .register-container input:focus { border-color: var(--brand-primary); outline: none; background: #fff; }
+  .register-btn {
+    width: 100%; padding: .9rem; border: none; border-radius: 6px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; font-family: inherit; color: #fff;
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-accent));
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .register-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,112,187,0.3); }
+  .register-btn:active { transform: translateY(0); }
+  .register-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
   .form-row { display: flex; gap: 1rem; }
   .form-row .form-group { flex: 1; }
   .checkbox-group { display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 1.25rem; }
   .checkbox-group input[type="checkbox"] { margin-top: 0.25rem; width: 18px; height: 18px; cursor: pointer; }
-  .checkbox-group label { font-size: 0.9rem; color: #444; line-height: 1.4; cursor: pointer; }
+  .checkbox-group label { font-size: 0.85rem; color: #444; line-height: 1.4; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 400; }
   .checkbox-group a { color: var(--brand-primary); text-decoration: underline; }
-  .success { background: #d4edda; color: #155724; padding: 0.75rem; margin-bottom: 1rem; border-left: 4px solid #28a745; }
-  @media (max-width: 480px) { 
-    .register-container { padding: 1.5rem; margin: 1rem; } 
+  .success { background: #d4edda; color: #155724; padding: 0.75rem 1rem; margin-bottom: 1rem; border-left: 4px solid #28a745; border-radius: 6px; font-size: .9rem; }
+  .reg-links { text-align: center; margin-top: 1.25rem; font-size: .9rem; color: #888; }
+  .reg-links a { color: var(--brand-primary); font-weight: 700; text-decoration: none; }
+  .reg-links a:hover { text-decoration: underline; }
+  @media (max-width: 720px) {
+    .reg-wrapper { flex-direction: column; max-width: 500px; }
+    .reg-side { flex: 0 0 auto; padding: 2rem 1.5rem; }
+    .register-container { padding: 2rem 1.5rem; }
     .form-row { flex-direction: column; gap: 0; }
   }
 </style>
 
-<div class="register-container">
-  <h1><%= t('register_title') %></h1>
+<div class="reg-wrapper">
+  <div class="reg-side">
+    <img src="/img/Think-different-Academy_LOGO_oficialni-bile.svg" alt="Think different Academy">
+    <p>Vzdělávací platforma pro interaktivní výuku</p>
+  </div>
+  <div class="register-container">
+    <h1><%= t('register_title') %></h1>
 
-  <% if (typeof error !== 'undefined' && error) { %>
-    <div class="error"><%= error %></div>
-  <% } %>
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="error" style="background:#fef2f2;color:#b91c1c;padding:.75rem 1rem;border-radius:6px;margin-bottom:1rem;font-size:.9rem;border-left:4px solid #b91c1c;"><%= error %></div>
+    <% } %>
 
-  <% if (typeof success !== 'undefined' && success) { %>
-    <div class="success"><%= success %></div>
-  <% } %>
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div class="success"><%= success %></div>
+    <% } %>
 
-  <form method="POST" action="/register" id="registerForm">
-    <div class="form-row">
-      <div class="form-group" style="margin-bottom: 1rem;">
-        <label for="firstName"><%= t('first_name') %> *</label>
-        <input type="text" id="firstName" name="firstName" required value="<%= typeof firstName !== 'undefined' ? firstName : '' %>">
+    <form method="POST" action="/register" id="registerForm">
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="firstName"><%= t('first_name') %> *</label>
+          <input type="text" id="firstName" name="firstName" required value="<%= typeof firstName !== 'undefined' ? firstName : '' %>">
+        </div>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="lastName"><%= t('last_name') %> *</label>
+          <input type="text" id="lastName" name="lastName" required value="<%= typeof lastName !== 'undefined' ? lastName : '' %>">
+        </div>
       </div>
       <div class="form-group" style="margin-bottom: 1rem;">
-        <label for="lastName"><%= t('last_name') %> *</label>
-        <input type="text" id="lastName" name="lastName" required value="<%= typeof lastName !== 'undefined' ? lastName : '' %>">
+        <label for="email"><%= t('email') %> *</label>
+        <input type="email" id="email" name="email" required value="<%= typeof email !== 'undefined' ? email : '' %>">
       </div>
-    </div>
-    <div class="form-group" style="margin-bottom: 1rem;">
-      <label for="email"><%= t('email') %> *</label>
-      <input type="email" id="email" name="email" required value="<%= typeof email !== 'undefined' ? email : '' %>">
-    </div>
-    <div class="form-group" style="margin-bottom: 1rem;">
-      <label for="password"><%= t('password') %> *</label>
-      <input type="password" id="password" name="password" required minlength="6">
-    </div>
-    <div class="form-group" style="margin-bottom: 1rem;">
-      <label for="confirmPassword"><%= t('confirm_password') %> *</label>
-      <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6">
-    </div>
-    <div class="checkbox-group">
-      <input type="checkbox" id="acceptTerms" name="acceptTerms" required>
-      <label for="acceptTerms">
-        <%= t('accept_terms') %> <a href="/about" target="_blank"><%= t('terms_and_privacy') %></a> *
-      </label>
-    </div>
-    <button type="submit" class="register-btn" id="submitBtn"><%= t('register_button') %></button>
-  </form>
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label for="password"><%= t('password') %> *</label>
+        <input type="password" id="password" name="password" required minlength="6">
+      </div>
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label for="confirmPassword"><%= t('confirm_password') %> *</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6">
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="acceptTerms" name="acceptTerms" required>
+        <label for="acceptTerms">
+          <%= t('accept_terms') %> <a href="/about" target="_blank"><%= t('terms_and_privacy') %></a> *
+        </label>
+      </div>
+      <button type="submit" class="register-btn" id="submitBtn"><%= t('register_button') %></button>
+    </form>
 
-  <p style="text-align:center;margin-top:1.25rem;color:#666;">
-    <%= t('already_have_account') %> <a href="/login" style="color:var(--brand-primary);font-weight:700;"><%= t('login') %></a>
-  </p>
-
-  <a href="/" class="back-link" style="display:block;text-align:center;margin-top:1rem;">&larr; <%= t('back_to_home') %></a>
+    <div class="reg-links">
+      <p><%= t('already_have_account') %> <a href="/login"><%= t('login') %></a></p>
+      <p style="margin-top:.5rem;"><a href="/" style="color:#888;font-weight:400;">&larr; <%= t('back_to_home') %></a></p>
+    </div>
+  </div>
 </div>
 
 <script>

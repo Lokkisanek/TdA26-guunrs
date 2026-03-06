@@ -21,7 +21,7 @@
           <p style="color:#666; font-size:0.95rem; margin-bottom:1.25rem; line-height:1.5;"><%= course.shortDescription || '' %></p>
           <div class="actions">
             <a href="/courses/<%= course.id %>" class="btn btn-secondary btn-sm"><%= t('view') %></a>
-            <button type="button" class="btn btn-sm" onclick="openEditModal('<%= course.id %>', '<%= course.title.replace(/'/g, "\\'") %>', '<%= (course.shortDescription || '').replace(/'/g, "\\'") %>')"><%= t('edit') %></button>
+            <a href="/dashboard/edit/courses/<%= course.id %>" class="btn btn-sm"><%= t('edit') %></a>
             <form method="POST" action="/dashboard/<%= course.id %>?_method=DELETE" onsubmit="return confirm('<%= t('delete_course_confirm') %>');" style="display:inline;">
               <button type="submit" class="btn btn-danger btn-sm"><%= t('delete') %></button>
             </form>

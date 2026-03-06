@@ -1,0 +1,467 @@
+<%- include('partials/header', { title: t('edit') + ': ' + course.title }) %>
+<style>
+  .editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+  .editor-header h1 {
+    color: var(--brand-blue-dark);
+    font-size: 1.6rem;
+    margin: 0;
+  }
+  .editor-header h1 span { color: var(--brand-primary); }
+  .editor-layout {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+  .editor-sidebar {
+    width: 200px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .sidebar-tab {
+    display: block;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    background: #fff;
+    border: none;
+    border-left: 4px solid transparent;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #555;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .sidebar-tab:hover {
+    background: #f8f9fa;
+    color: var(--brand-blue-dark);
+  }
+  .sidebar-tab.active {
+    background: #fff;
+    color: var(--brand-primary);
+    border-left-color: var(--brand-primary);
+    font-weight: 700;
+  }
+  .editor-main {
+    flex: 1;
+    min-width: 0;
+  }
+  .tab-panel {
+    display: none;
+  }
+  .tab-panel.active {
+    display: block;
+  }
+
+  /* Visibility selector */
+  .visibility-options {
+    display: flex;
+    gap: 0.75rem;
+    margin: 1rem 0;
+    flex-wrap: wrap;
+  }
+  .visibility-option {
+    flex: 1;
+    min-width: 140px;
+    padding: 1rem;
+    background: #f8f9fa;
+    border: 2px solid #eee;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    font-family: inherit;
+  }
+  .visibility-option:hover {
+    border-color: #ccc;
+  }
+  .visibility-option.selected {
+    border-color: #333;
+    background: #222;
+    color: #fff;
+  }
+  .visibility-option.selected .vis-label {
+    color: #fff;
+  }
+  .visibility-option .vis-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.35rem;
+  }
+  .visibility-option .vis-label {
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  /* Session badges */
+  .session-state { font-weight: 700; font-size: 0.8rem; padding: 0.2rem 0.55rem; border-radius: 4px; display: inline-block; }
+  .session-state.DRAFT { background: #e9ecef; color: #555; }
+  .session-state.LIVE { background: #28a745; color: #fff; }
+  .session-state.PAUSED { background: #ffc107; color: #333; }
+  .session-state.ARCHIVED { background: #f8d7da; color: #721c24; }
+  .session-state.SCHEDULED { background: #d4edda; color: #155724; }
+
+  /* Lesson item */
+  .lesson-item {
+    background: #f8f9fa;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border-left: 4px solid var(--brand-primary);
+  }
+  .lesson-item h3 { margin: 0 0 0.25rem; font-size: 1.05rem; }
+  .lesson-item .meta { font-size: 0.8rem; color: #888; margin-bottom: 0.5rem; }
+
+  /* Badge */
+  .badge { display: inline-block; padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+  .badge-type { background: #e9ecef; color: #555; }
+  .badge-published { background: #d4edda; color: #155724; }
+  .badge-draft { background: #f8d7da; color: #721c24; }
+
+  /* Session item */
+  .session-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 768px) {
+    .editor-layout {
+      flex-direction: column;
+    }
+    .editor-sidebar {
+      width: 100%;
+      flex-direction: row;
+      overflow-x: auto;
+    }
+    .sidebar-tab {
+      border-left: none;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .sidebar-tab.active {
+      border-bottom-color: var(--brand-primary);
+      border-left-color: transparent;
+    }
+  }
+</style>
+
+<div class="container">
+  <a href="/dashboard" class="back-link">&larr; <%= t('back_to_dashboard') %></a>
+
+  <div class="editor-header">
+    <h1><%= lang === 'en' ? 'Editor' : 'Editor' %>: <span><%= course.title %></span></h1>
+    <a href="/courses/<%= course.id %>" class="btn btn-secondary"><%= t('view') %></a>
+  </div>
+
+  <div class="editor-layout">
+    <!-- Sidebar -->
+    <nav class="editor-sidebar">
+      <button class="sidebar-tab active" data-tab="general"><%= lang === 'en' ? 'General Info' : 'Obecné info' %></button>
+      <button class="sidebar-tab" data-tab="modules"><%= lang === 'en' ? 'Modules' : 'Moduly' %></button>
+      <button class="sidebar-tab" data-tab="feed"><%= lang === 'en' ? 'Course Feed' : 'Kanál kurzu' %></button>
+    </nav>
+
+    <!-- Main content -->
+    <div class="editor-main">
+
+      <!-- ═══ TAB: General Info ═══ -->
+      <div class="tab-panel active" id="tab-general">
+
+        <!-- ── Course Visibility ── -->
+        <div class="card" style="margin-bottom:1.5rem;">
+          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;">
+            <h2 style="margin:0;"><%= t('course_visibility').toUpperCase() %></h2>
+            <span style="border:2px solid #333; padding:0.25rem 0.75rem; font-weight:700; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.03em;">
+              <%= t('current_state') %>: <%= course.visibility === 'LIVE' ? t('vis_live') : course.visibility === 'CLOSED' ? t('vis_closed') : t('vis_preparation') %>
+            </span>
+          </div>
+
+          <form method="POST" action="/dashboard/edit/courses/<%= course.id %>/visibility" id="visibilityForm">
+            <div class="visibility-options">
+              <button type="button" class="visibility-option<%= course.visibility === 'PREPARATION' ? ' selected' : '' %>" data-value="PREPARATION" onclick="selectVisibility(this)">
+                <div class="vis-label"><%= t('in_preparation').toUpperCase() %></div>
+              </button>
+              <button type="button" class="visibility-option<%= course.visibility === 'LIVE' ? ' selected' : '' %>" data-value="LIVE" onclick="selectVisibility(this)">
+                <div class="vis-label"><%= t('open_live').toUpperCase() %></div>
+              </button>
+              <button type="button" class="visibility-option<%= course.visibility === 'CLOSED' ? ' selected' : '' %>" data-value="CLOSED" onclick="selectVisibility(this)">
+                <div class="vis-label"><%= t('temporarily_closed').toUpperCase() %></div>
+              </button>
+            </div>
+            <input type="hidden" name="visibility" id="visibilityInput" value="<%= course.visibility %>">
+
+            <!-- Schedule checkbox -->
+            <div style="border:2px dashed #ccc; padding:0.75rem 1rem; margin:1rem 0; display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+              <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-weight:700; text-transform:uppercase; font-size:0.85rem; letter-spacing:0.03em; margin:0;">
+                <input type="checkbox" id="scheduleCheck" name="scheduleEnabled" onchange="toggleSchedule()" <%= course.scheduledAt ? 'checked' : '' %>>
+                <%= t('schedule_state_change').toUpperCase() %>
+              </label>
+              <div id="scheduleFields" style="display:<%= course.scheduledAt ? 'flex' : 'none' %>; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                <input type="datetime-local" name="scheduledAt" id="scheduledAtInput" value="<%= course.scheduledAt ? new Date(course.scheduledAt).toISOString().slice(0,16) : '' %>" style="padding:0.4rem 0.6rem; border:1px solid #ccc; font-family:inherit; font-size:0.9rem;">
+                <select name="scheduledChange" id="scheduledChangeInput" style="padding:0.4rem 0.6rem; border:1px solid #ccc; font-family:inherit; font-size:0.9rem;">
+                  <option value="PREPARATION" <%= course.scheduledChange === 'PREPARATION' ? 'selected' : '' %>><%= t('in_preparation') %></option>
+                  <option value="LIVE" <%= course.scheduledChange === 'LIVE' ? 'selected' : '' %>><%= t('open_live') %></option>
+                  <option value="CLOSED" <%= course.scheduledChange === 'CLOSED' ? 'selected' : '' %>><%= t('temporarily_closed') %></option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="btn" style="background:#c8f7c5; color:#333; border:2px solid #999; font-weight:700; text-transform:uppercase;">
+              <%= t('apply_now').toUpperCase() %>
+            </button>
+          </form>
+        </div>
+
+        <!-- ── Course Details ── -->
+        <div class="card">
+          <h2><%= lang === 'en' ? 'Course Settings' : 'Nastavení kurzu' %></h2>
+
+          <form method="POST" action="/dashboard/edit/courses/<%= course.id %>">
+            <div class="form-group" style="margin-bottom:1.25rem;">
+              <label for="courseTitle" style="font-weight:700; text-transform:uppercase; font-size:0.8rem; letter-spacing:0.05em; color:#555;"><%= t('course_title').toUpperCase() %></label>
+              <input type="text" id="courseTitle" name="title" value="<%= course.title %>" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom:1.25rem;">
+              <label for="courseShortDesc" style="font-weight:700; text-transform:uppercase; font-size:0.8rem; letter-spacing:0.05em; color:#555;"><%= t('short_description').toUpperCase() %></label>
+              <input type="text" id="courseShortDesc" name="shortDescription" value="<%= course.shortDescription || '' %>">
+            </div>
+
+            <div class="form-group" style="margin-bottom:1.25rem;">
+              <label for="courseDesc" style="font-weight:700; text-transform:uppercase; font-size:0.8rem; letter-spacing:0.05em; color:#555;"><%= t('description').toUpperCase() %></label>
+              <textarea id="courseDesc" name="description" rows="5"><%= course.description || '' %></textarea>
+            </div>
+
+            <button type="submit" class="btn"><%= t('save_changes') %></button>
+          </form>
+        </div>
+
+        <!-- ── Course Statistics ── -->
+        <div class="card" style="margin-top:1.5rem;">
+          <h2><%= t('course_statistics').toUpperCase() %></h2>
+          <p style="color:#666; margin-bottom:1rem; font-size:0.9rem;"><%= t('stats_description') %></p>
+
+          <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.25rem;">
+            <div style="flex:1; min-width:120px; padding:1rem; background:#f8f9fa; text-align:center;">
+              <div style="font-size:1.8rem; font-weight:700; color:var(--brand-primary);"><%= course.lessons ? course.lessons.length : 0 %></div>
+              <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:#555;"><%= t('lessons') %></div>
+            </div>
+            <div style="flex:1; min-width:120px; padding:1rem; background:#f8f9fa; text-align:center;">
+              <div style="font-size:1.8rem; font-weight:700; color:var(--brand-primary);"><%= course.lessons ? course.lessons.reduce((sum, l) => sum + (l._count ? l._count.pages : 0), 0) : 0 %></div>
+              <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:#555;"><%= t('pages') %></div>
+            </div>
+            <div style="flex:1; min-width:120px; padding:1rem; background:#f8f9fa; text-align:center;">
+              <div style="font-size:1.8rem; font-weight:700; color:var(--brand-primary);"><%= course.lessons ? course.lessons.reduce((sum, l) => sum + (l._count ? l._count.liveSessions : 0), 0) : 0 %></div>
+              <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:#555;"><%= t('sessions') %></div>
+            </div>
+          </div>
+
+          <a href="/dashboard/edit/courses/<%= course.id %>/stats.csv" class="btn">
+            <%= t('download_stats_csv') %>
+          </a>
+        </div>
+      </div>
+
+      <!-- ═══ TAB: Modules (Lessons) ═══ -->
+      <div class="tab-panel" id="tab-modules">
+        <div class="card">
+          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;">
+            <h2 style="margin-bottom:0;"><%= t('course_lessons') %></h2>
+            <form method="POST" action="/dashboard/courses/<%= course.id %>/lessons" style="display:inline-flex; gap:0.5rem; align-items:center;">
+              <input type="text" name="title" placeholder="<%= t('lesson_name') %>" style="padding:0.5rem 0.75rem; border:1px solid rgba(0,0,0,0.06); font-size:0.9rem; font-family:inherit;">
+              <button type="submit" class="btn btn-success btn-sm"><%= t('new_lesson') %></button>
+            </form>
+          </div>
+
+          <% if (course.lessons && course.lessons.length > 0) { %>
+            <% course.lessons.forEach(function(lesson) { %>
+              <div class="lesson-item">
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+                  <div>
+                    <h3><%= lesson.title %></h3>
+                    <div class="meta">
+                      <span><%= lesson._count ? lesson._count.pages : 0 %> <%= t('pages') %></span>
+                      &nbsp;·&nbsp;
+                      <span><%= lesson._count ? lesson._count.liveSessions : 0 %> <%= t('sessions') %></span>
+                    </div>
+                  </div>
+                  <div class="actions">
+                    <a href="/dashboard/lessons/<%= lesson.id %>" class="btn btn-sm"><%= t('manage') %></a>
+                    <form method="POST" action="/dashboard/lessons/<%= lesson.id %>/duplicate" style="display:inline;">
+                      <button type="submit" class="btn btn-secondary btn-sm"><%= t('duplicate') %></button>
+                    </form>
+                    <form method="POST" action="/dashboard/lessons/<%= lesson.id %>/delete" onsubmit="return confirm('<%= t('delete_lesson_confirm') %>');" style="display:inline;">
+                      <button type="submit" class="btn btn-danger btn-sm"><%= t('delete') %></button>
+                    </form>
+                  </div>
+                </div>
+
+                <!-- Sessions for this lesson -->
+                <% if (lesson.liveSessions && lesson.liveSessions.length > 0) { %>
+                  <div style="margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid #eee;">
+                    <p style="font-size:0.8rem; font-weight:700; color:#555; margin-bottom:0.5rem; text-transform:uppercase;"><%= t('live_sessions') %></p>
+                    <% lesson.liveSessions.forEach(function(s) { %>
+                      <div class="session-item">
+                        <span class="session-state <%= s.currentState %>"><%= s.currentState %></span>
+                        <span style="font-size:0.8rem; color:#888;"><%= new Date(s.createdAt).toLocaleString(lang === 'en' ? 'en-US' : 'cs-CZ') %></span>
+                        <% if (s.currentState !== 'ARCHIVED') { %>
+                          <a href="/classroom/teacher/<%= s.id %>" class="btn btn-sm"><%= t('manage_live') %></a>
+                        <% } %>
+                        <a href="/classroom/student/<%= s.id %>" class="btn btn-sm btn-secondary"><%= t('student_view') %></a>
+                      </div>
+                    <% }) %>
+                  </div>
+                <% } %>
+              </div>
+            <% }) %>
+          <% } else { %>
+            <p style="color:#888; font-style:italic;"><%= t('no_lessons') %></p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- ═══ TAB: Course Feed ═══ -->
+      <div class="tab-panel" id="tab-feed">
+        <div class="card">
+          <h2><%= t('feed_channel') %></h2>
+
+          <!-- Post form -->
+          <form id="feedForm" style="margin-bottom:1.5rem;">
+            <div class="form-group">
+              <textarea id="feedContent" placeholder="<%= t('write_message') %>" rows="3" style="width:100%;"></textarea>
+            </div>
+            <button type="submit" class="btn" style="margin-top:0.5rem;"><%= t('send_post') %></button>
+          </form>
+
+          <!-- Feed entries -->
+          <div id="feedList">
+            <p style="color:#888;"><%= t('loading_feed') %></p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // Visibility selector
+  function selectVisibility(btn) {
+    document.querySelectorAll('.visibility-option').forEach(function(o) { o.classList.remove('selected'); });
+    btn.classList.add('selected');
+    document.getElementById('visibilityInput').value = btn.dataset.value;
+  }
+  function toggleSchedule() {
+    var checked = document.getElementById('scheduleCheck').checked;
+    document.getElementById('scheduleFields').style.display = checked ? 'flex' : 'none';
+  }
+
+  // Tab switching
+  (function() {
+    var tabs = document.querySelectorAll('.sidebar-tab');
+    var panels = document.querySelectorAll('.tab-panel');
+
+    tabs.forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        tabs.forEach(function(t) { t.classList.remove('active'); });
+        panels.forEach(function(p) { p.classList.remove('active'); });
+        tab.classList.add('active');
+        var target = document.getElementById('tab-' + tab.dataset.tab);
+        if (target) target.classList.add('active');
+      });
+    });
+  })();
+
+  // Feed functionality
+  (function() {
+    var courseId = '<%= course.id %>';
+    var feedList = document.getElementById('feedList');
+    var feedForm = document.getElementById('feedForm');
+    var feedContent = document.getElementById('feedContent');
+
+    function loadFeed() {
+      fetch('/api/courses/' + courseId + '/feed')
+        .then(function(r) { return r.json(); })
+        .then(function(entries) {
+          if (!entries || entries.length === 0) {
+            feedList.innerHTML = '<p style="color:#888; font-style:italic;"><%= t("no_posts_yet") %></p>';
+            return;
+          }
+          feedList.innerHTML = entries.map(function(e) {
+            var isTeacher = e.type === 'teacher' || e.type === 'TEACHER';
+            var badge = isTeacher ? '<span style="background:#667eea;color:#fff;padding:0.1rem 0.4rem;border-radius:3px;font-size:0.7rem;font-weight:700;"><%= t("teacher") %></span>' : '<span style="background:#28a745;color:#fff;padding:0.1rem 0.4rem;border-radius:3px;font-size:0.7rem;font-weight:700;"><%= t("system") %></span>';
+            var date = new Date(e.createdAt).toLocaleString('<%= lang === "en" ? "en-US" : "cs-CZ" %>');
+            var editedTag = e.editedAt ? ' <em style="font-size:0.75rem;color:#888;">(<%= t("edited") %>)</em>' : '';
+            var actions = isTeacher ? '<div style="margin-top:0.35rem;display:flex;gap:0.5rem;"><button onclick="editPost(\'' + e.id + '\', this)" style="background:none;border:none;color:#667eea;cursor:pointer;font-size:0.8rem;font-family:inherit;padding:0;"><%= t("edit") %></button><button onclick="deletePost(\'' + e.id + '\')" style="background:none;border:none;color:#dc3545;cursor:pointer;font-size:0.8rem;font-family:inherit;padding:0;"><%= t("delete") %></button></div>' : '';
+            return '<div style="padding:0.75rem;margin-bottom:0.5rem;background:#f8f9fa;border-left:4px solid ' + (isTeacher ? '#667eea' : '#28a745') + ';">' +
+              '<div style="font-size:0.8rem;color:#888;margin-bottom:0.35rem;">' + badge + ' ' + date + editedTag + '</div>' +
+              '<div style="color:#333;line-height:1.5;">' + (e.content || '') + '</div>' +
+              actions +
+            '</div>';
+          }).join('');
+        })
+        .catch(function() {
+          feedList.innerHTML = '<p style="color:#c00;"><%= t("feed_load_error") %></p>';
+        });
+    }
+
+    if (feedForm) {
+      feedForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var content = feedContent.value.trim();
+        if (!content) return;
+        fetch('/api/courses/' + courseId + '/feed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: content })
+        }).then(function() {
+          feedContent.value = '';
+          loadFeed();
+        });
+      });
+    }
+
+    // Edit post
+    window.editPost = function(postId, btn) {
+      var contentDiv = btn.closest('div').previousElementSibling;
+      var oldText = contentDiv.textContent;
+      var newText = prompt('<%= t("edit_post") %>', oldText);
+      if (newText !== null && newText.trim() !== '') {
+        fetch('/api/courses/' + courseId + '/feed/' + postId, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: newText.trim() })
+        }).then(function() { loadFeed(); });
+      }
+    };
+
+    // Delete post
+    window.deletePost = function(postId) {
+      if (confirm('<%= t("delete_post_confirm") %>')) {
+        fetch('/api/courses/' + courseId + '/feed/' + postId, { method: 'DELETE' })
+          .then(function() { loadFeed(); });
+      }
+    };
+
+    // Load feed when tab is shown
+    document.querySelector('[data-tab="feed"]').addEventListener('click', function() {
+      loadFeed();
+    });
+  })();
+</script>
+
+<%- include('partials/footer') %>

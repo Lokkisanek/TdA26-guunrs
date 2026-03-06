@@ -60,6 +60,7 @@ apiRouter.get("/", (_req, res) => {
 apiRouter.get("/courses", async (req, res, next) => {
   try {
     const courses = await req.prisma.course.findMany({
+      where: { visibility: "LIVE" },
       orderBy: { createdAt: "desc" },
     });
     res.json(courses.map(toApiCourse));

@@ -24,6 +24,9 @@
     </div>
     <a href="/profile/edit" class="btn" style="display:block; text-align:center; width:100%;"><%= t('edit_account_settings').toUpperCase() %></a>
     <% } %>
+    <% if (typeof user !== 'undefined' && user && user.isAdmin) { %>
+    <a href="/dashboard/users" class="btn btn-secondary" style="display:block; text-align:center; width:100%; margin-top:0.75rem;"><%= t('manage_users').toUpperCase() %></a>
+    <% } %>
   </div>
 </div>
 <% } else { %>
