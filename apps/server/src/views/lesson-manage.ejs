@@ -14,59 +14,59 @@
 </style>
 
 <div class="container">
-<a href="/dashboard" class="back-link">&larr; Zpět na dashboard</a>
+<a href="/dashboard" class="back-link">&larr; <%= t('back_to_dashboard') %></a>
 <h1><%= lesson.title %></h1>
-<p class="subtitle">Kurz: <%= lesson.course.title %></p>
+<p class="subtitle"><%= lang === 'en' ? 'Course' : 'Kurz' %>: <%= lesson.course.title %></p>
 
 <!-- Add Page -->
 <div class="card">
-  <h2>Přidat stránku</h2>
+  <h2><%= t('add_page') %></h2>
   <form method="POST" action="/dashboard/lessons/<%= lesson.id %>/pages">
     <div class="form-row">
       <div class="form-group">
-        <label for="pageTitle">Název stránky *</label>
+        <label for="pageTitle"><%= t('page_title') %> *</label>
         <input type="text" id="pageTitle" name="title" required>
       </div>
       <div class="form-group">
-        <label for="pageType">Typ</label>
+        <label for="pageType"><%= t('page_type') %></label>
         <select id="pageType" name="type">
-          <option value="text">Text</option>
-          <option value="video">Video</option>
-          <option value="quiz">Kvíz</option>
-          <option value="empty_stylized">Vizuální oddělovač</option>
+          <option value="text"><%= t('text') %></option>
+          <option value="video"><%= t('video') %></option>
+          <option value="quiz"><%= t('quiz') %></option>
+          <option value="empty_stylized"><%= t('visual_divider') %></option>
         </select>
       </div>
     </div>
     <div class="form-group">
-      <label for="pageContent">Obsah (HTML / URL / JSON pro kvíz)</label>
+      <label for="pageContent"><%= t('content_html') %></label>
       <textarea id="pageContent" name="content"></textarea>
     </div>
     <div class="form-group">
-      <label><input type="checkbox" name="isPublished" value="true" checked> Publikováno</label>
+      <label><input type="checkbox" name="isPublished" value="true" checked> <%= t('published') %></label>
     </div>
-    <button type="submit" class="btn">Přidat stránku</button>
+    <button type="submit" class="btn"><%= t('add_page') %></button>
   </form>
 </div>
 
 <!-- Pages List -->
 <div class="card">
-  <h2>Stránky lekce (<%= lesson.pages.length %>)</h2>
+  <h2><%= t('lesson_pages') %> (<%= lesson.pages.length %>)</h2>
   <% if (lesson.pages.length > 0) { %>
     <table>
-      <thead><tr><th>#</th><th>Název</th><th>Typ</th><th>Stav</th><th>Akce</th></tr></thead>
+      <thead><tr><th>#</th><th><%= t('title') %></th><th><%= t('page_type') %></th><th><%= t('state') %></th><th><%= t('actions') %></th></tr></thead>
       <tbody>
         <% lesson.pages.forEach(function(page, i) { %>
           <tr>
             <td><%= i + 1 %></td>
             <td><%= page.title %></td>
             <td><span class="badge badge-type"><%= page.type %></span></td>
-            <td><span class="badge <%= page.isPublished ? 'badge-published' : 'badge-draft' %>"><%= page.isPublished ? 'Publikováno' : 'Draft' %></span></td>
+            <td><span class="badge <%= page.isPublished ? 'badge-published' : 'badge-draft' %>"><%= page.isPublished ? t('published') : t('draft') %></span></td>
             <td class="actions">
               <form method="POST" action="/dashboard/pages/<%= page.id %>/toggle-publish">
-                <button type="submit" class="btn btn-sm btn-warning"><%= page.isPublished ? 'Skrýt' : 'Publikovat' %></button>
+                <button type="submit" class="btn btn-sm btn-warning"><%= page.isPublished ? t('hide') : t('publish') %></button>
               </form>
-              <form method="POST" action="/dashboard/pages/<%= page.id %>/delete" onsubmit="return confirm('Smazat stránku?');">
-                <button type="submit" class="btn btn-sm btn-danger">Smazat</button>
+              <form method="POST" action="/dashboard/pages/<%= page.id %>/delete" onsubmit="return confirm('<%= t('delete_page_confirm') %>');">
+                <button type="submit" class="btn btn-sm btn-danger"><%= t('delete') %></button>
               </form>
             </td>
           </tr>
@@ -74,29 +74,29 @@
       </tbody>
     </table>
   <% } else { %>
-    <p style="color:#888;">Zatím žádné stránky. Přidejte první výše.</p>
+    <p style="color:#888;"><%= t('no_pages_yet') %></p>
   <% } %>
 </div>
 
 <!-- Live Sessions -->
 <div class="card">
-  <h2>Živé relace</h2>
+  <h2><%= t('live_sessions') %></h2>
   <form method="POST" action="/dashboard/lessons/<%= lesson.id %>/sessions" style="margin-bottom:1rem;">
-    <button type="submit" class="btn btn-success">+ Vytvořit novou relaci</button>
+    <button type="submit" class="btn btn-success"><%= t('create_session') %></button>
   </form>
   <% if (lesson.liveSessions && lesson.liveSessions.length > 0) { %>
     <% lesson.liveSessions.forEach(function(s) { %>
       <div class="session-item">
         <span class="session-state <%= s.currentState %>"><%= s.currentState %></span>
-        <span style="font-size:0.85rem;color:#888;">Vytvořena: <%= new Date(s.createdAt).toLocaleString('cs-CZ') %></span>
+        <span style="font-size:0.85rem;color:#888;"><%= t('created') %>: <%= new Date(s.createdAt).toLocaleString(lang === 'en' ? 'en-US' : 'cs-CZ') %></span>
         <% if (s.currentState !== 'ARCHIVED') { %>
-          <a href="/classroom/teacher/<%= s.id %>" class="btn btn-sm">Spravovat živě</a>
+          <a href="/classroom/teacher/<%= s.id %>" class="btn btn-sm"><%= t('manage_live') %></a>
         <% } %>
-        <a href="/classroom/student/<%= s.id %>" class="btn btn-sm btn-secondary">Studentský pohled</a>
+        <a href="/classroom/student/<%= s.id %>" class="btn btn-sm btn-secondary"><%= t('student_view') %></a>
       </div>
     <% }) %>
   <% } else { %>
-    <p style="color:#888;">Žádné relace. Vytvořte první výše.</p>
+    <p style="color:#888;"><%= t('no_sessions') %></p>
   <% } %>
 </div>
 </div>

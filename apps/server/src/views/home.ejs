@@ -17,9 +17,9 @@
 
 <div class="hero">
   <img class="home-logo" src="/img/Think-different-Academy_LOGO_oficialni-bile2.svg" alt="Think different Academy logo">
-  <p class="lead">Vítejte v Think different Academy — správa kurzů a interaktivní výuka pro studenty i lektory.</p>
-  <a class="btn-cta" href="/courses" aria-label="Prohlédnout kurzy">
-    <span>Prohlédnout kurzy</span>
+  <p class="lead"><%= typeof lang !== 'undefined' && lang === 'en' ? 'Welcome to Think different Academy — course management and interactive teaching for students and lecturers.' : 'Vítejte v Think different Academy — správa kurzů a interaktivní výuka pro studenty i lektory.' %></p>
+  <a class="btn-cta" href="/courses" aria-label="<%= typeof lang !== 'undefined' && lang === 'en' ? 'Browse courses' : 'Prohlédnout kurzy' %>">
+    <span><%= typeof lang !== 'undefined' && lang === 'en' ? 'Browse courses' : 'Prohlédnout kurzy' %></span>
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
       <path d="M8 5l8 7-8 7" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>

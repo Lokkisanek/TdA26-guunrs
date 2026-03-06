@@ -1,15 +1,15 @@
-<%- include('partials/header', { title: 'Kurzy' }) %>
+<%- include('partials/header', { title: t('courses') }) %>
 <style>
   h1 { color: var(--brand-blue-dark); margin-bottom: 1.5rem; }
   .navbar { background: var(--brand-primary); }
 </style>
 
 <div class="container">
-  <h1>Dostupné kurzy</h1>
+  <h1><%= t('available_courses') %></h1>
 
   <form class="search-form" method="GET" action="/courses" id="searchForm">
-    <input type="text" name="search" id="searchInput" placeholder="Hledat kurz..." value="<%= search %>" autocomplete="off">
-    <button type="submit">Hledat</button>
+    <input type="text" name="search" id="searchInput" placeholder="<%= t('search_course') %>" value="<%= search %>" autocomplete="off">
+    <button type="submit"><%= t('search') %></button>
   </form>
 
   <div class="courses-grid" id="coursesGrid">
@@ -19,13 +19,13 @@
            data-name="<%= course.title.toLowerCase() %>"
            data-desc="<%= (course.shortDescription || course.description || '').toLowerCase() %>">
           <h2><%= course.title %></h2>
-          <p><%= course.shortDescription || course.description || 'Bez popisu' %></p>
-          <span class="card-btn">Zobrazit detail</span>
+          <p><%= course.shortDescription || course.description || t('no_description') %></p>
+          <span class="card-btn"><%= t('view_detail') %></span>
         </a>
       <% }) %>
     <% } else { %>
       <div class="no-courses">
-        <p>Žádné kurzy nenalezeny.</p>
+        <p><%= t('no_courses_found') %></p>
       </div>
     <% } %>
   </div>
@@ -61,7 +61,7 @@
         if (!noCoursesDiv) {
           var div = document.createElement('div');
           div.className = 'no-courses live-search-empty';
-          div.innerHTML = '<p>Žádné kurzy nenalezeny.</p>';
+          div.innerHTML = '<p><%= t("no_courses_found") %></p>';
           coursesGrid.appendChild(div);
         }
       } else if (noCoursesDiv) {

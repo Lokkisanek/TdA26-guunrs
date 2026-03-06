@@ -21,7 +21,7 @@
   .nav-item.active { background: #e3f0ff; border-left: 4px solid var(--brand-primary); }
   .nav-item .type-badge { font-size: 0.7rem; color: #888; background: #f0f0f0; padding: 0.1rem 0.35rem; border-radius: 3px; }
   .sidebar.sync-locked { opacity: 0.6; pointer-events: none; }
-  .sidebar.sync-locked::after { content: 'Navigace zamčena učitelem'; display: block; text-align: center; color: #dc3545; font-size: 0.8rem; margin-top: 0.75rem; font-weight: 700; }
+  .sidebar.sync-locked::after { content: '<%= t("nav_locked") %>'; display: block; text-align: center; color: #dc3545; font-size: 0.8rem; margin-top: 0.75rem; font-weight: 700; }
   .content-panel { background: #fff; border-top: 6px solid var(--brand-primary); padding: 1.5rem; min-height: 500px; }
   .content-panel h2 { color: var(--brand-blue-dark); margin-bottom: 0.75rem; }
   .content-panel .page-type-label { font-size: 0.8rem; color: #888; margin-bottom: 1rem; display: block; }
@@ -39,7 +39,17 @@
   .quiz-submit:disabled { opacity: 0.5; cursor: not-allowed; }
   .quiz-result { text-align: center; padding: 2rem; }
   .quiz-result .score { font-size: 3rem; font-weight: 700; color: var(--brand-primary); }
+  .quiz-result .score.high { color: #28a745; }
+  .quiz-result .score.medium { color: #ffc107; }
+  .quiz-result .score.low { color: #dc3545; }
   .quiz-result .label { font-size: 1.1rem; color: #666; }
+  .quiz-result-detail { margin-top: 1.5rem; text-align: left; }
+  .quiz-result-item { padding: 0.75rem 1rem; margin-bottom: 0.5rem; border-radius: 6px; border-left: 4px solid #ccc; background: #f8f9fa; }
+  .quiz-result-item.correct { border-left-color: #28a745; background: #d4edda; }
+  .quiz-result-item.incorrect { border-left-color: #dc3545; background: #f8d7da; }
+  .quiz-result-item .result-icon { font-size: 1.2rem; margin-right: 0.5rem; }
+  .quiz-result-item .result-text { font-weight: 600; }
+  .quiz-result-item .result-answer { font-size: 0.85rem; color: #555; margin-top: 0.25rem; }
   .stylized-divider { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 4rem 2rem; text-align: center; border-radius: 4px; font-size: 1.5rem; font-weight: 700; }
   .mode-toggle { display: inline-flex; gap: 0; border: 2px solid var(--brand-primary); border-radius: 6px; overflow: hidden; margin-bottom: 1rem; }
   .mode-toggle button { padding: 0.4rem 0.85rem; border: none; background: #fff; font-weight: 700; font-size: 0.85rem; cursor: pointer; color: var(--brand-primary); font-family: inherit; }
@@ -48,21 +58,21 @@
 </style>
 
 <div class="container">
-<a href="/courses/<%= lesson.courseId %>" class="back-link">&larr; Zpět na kurz</a>
+<a href="/courses/<%= lesson.courseId %>" class="back-link">&larr; <%= t('back_to_course') %></a>
 
 <div class="lesson-header">
   <h1><%= lesson.title %></h1>
   <p class="meta">Kurz: <%= lesson.course.title %></p>
 </div>
 
-<div class="connection-bar connected" id="connectionBar">Připojeno</div>
+<div class="connection-bar connected" id="connectionBar"><%= t('connected') %></div>
 <div class="state-banner <%= session.currentState %>" id="stateBanner">
-  <%= session.currentState === 'LIVE' ? 'Živé vysílání' : session.currentState === 'PAUSED' ? 'Pozastaveno' : session.currentState === 'ARCHIVED' ? 'Archivováno' : 'Čekáme na zahájení...' %>
+  <%= session.currentState === 'LIVE' ? t('live_broadcast') : session.currentState === 'PAUSED' ? t('paused') : session.currentState === 'ARCHIVED' ? t('archived') : t('waiting_start') %>
 </div>
 
 <div class="classroom-layout">
   <div class="sidebar" id="sidebar">
-    <h3>Obsah lekce</h3>
+    <h3><%= t('lesson_content') %></h3>
     <div class="mode-toggle" id="modeToggle" style="display:none;">
       <button id="btnSync" class="active">Sync</button>
       <button id="btnAsync">Async</button>
@@ -71,7 +81,7 @@
   </div>
 
   <div class="content-panel" id="contentPanel">
-    <div class="content-empty" id="contentEmpty"><p>Čekáme na učitele, až zahájí lekci...</p></div>
+    <div class="content-empty" id="contentEmpty"><p><%= t('waiting_teacher') %></p></div>
     <div id="contentDisplay" style="display:none;"></div>
   </div>
 </div>
@@ -89,6 +99,29 @@
   var currentViewPageId = null;
   var quizSubmitted = {};
 
+  var i18n = {
+    connected: '<%= t("connected") %>',
+    disconnected: '<%= t("disconnected") %>',
+    reconnecting: '<%= t("reconnecting") %>',
+    live: '<%= t("live_broadcast") %>',
+    paused: '<%= t("paused") %>',
+    archived: '<%= t("archived") %>',
+    waiting: '<%= t("waiting_start") %>',
+    scheduled: '<%= t("scheduled") %>',
+    video_na: '<%= t("video_unavailable") %>',
+    empty: '<%= t("empty_content") %>',
+    quiz_error: '<%= t("quiz_load_error") %>',
+    quiz_no_q: '<%= t("quiz_no_questions") %>',
+    submit_answers: '<%= t("submit_answers") %>',
+    quiz_submitted: '<%= t("quiz_submitted") %>',
+    submitting: '<%= t("quiz_submitted_progress") %>',
+    your_score: '<%= t("your_score") %>',
+    page_hidden: '<%= t("page_hidden") %>',
+    your_answer: '<%= t("your_answer") %>',
+    correct_answer: '<%= t("correct_answer") %>',
+    correct_text: '<%= t("correct") %>'
+  };
+
   var socket = io('/classroom', {
     query: { sessionId: SESSION_ID, role: 'student', studentId: STUDENT_ID },
     reconnection: true, reconnectionAttempts: Infinity,
@@ -96,11 +129,11 @@
   });
 
   socket.on('connect', function() {
-    updateConnectionBar('connected', 'Připojeno');
+    updateConnectionBar('connected', i18n.connected);
     socket.emit('request_state_recovery');
   });
-  socket.on('disconnect', function() { updateConnectionBar('disconnected', 'Odpojeno — pokouším se znovu připojit...'); });
-  socket.io.on('reconnect_attempt', function() { updateConnectionBar('reconnecting', 'Připojuji...'); });
+  socket.on('disconnect', function() { updateConnectionBar('disconnected', i18n.disconnected); });
+  socket.io.on('reconnect_attempt', function() { updateConnectionBar('reconnecting', i18n.reconnecting); });
   socket.on('error_msg', function(data) { console.warn('[student] Error:', data.message); });
 
   socket.on('state_recovery', function(data) {
@@ -125,11 +158,11 @@
     } else {
       pages = pages.filter(function(p) { return p.id !== data.pageId; });
       renderNav();
-      if (currentViewPageId === data.pageId) showEmpty('Tato stránka byla skryta učitelem.');
+      if (currentViewPageId === data.pageId) showEmpty(i18n.page_hidden);
     }
   });
 
-  socket.on('quiz_result', function(data) { showQuizResult(data.score); });
+  socket.on('quiz_result', function(data) { showQuizResult(data.score, data.answerResults); });
 
   function setMode(m) {
     mode = m;
@@ -171,11 +204,11 @@
           html += '<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;background:#000;border-radius:4px;margin-bottom:1rem;"><iframe src="' + page.content + '" style="position:absolute;top:0;left:0;width:100%;height:100%;" frameborder="0" allowfullscreen></iframe></div>';
         } else if (page.content) {
           html += '<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;background:#000;border-radius:4px;margin-bottom:1rem;"><video controls src="' + page.content + '" style="position:absolute;top:0;left:0;width:100%;height:100%;"></video></div>';
-        } else { html += '<div class="video-placeholder">Video není k dispozici</div>'; }
+        } else { html += '<div class="video-placeholder">' + i18n.video_na + '</div>'; }
         break;
       case 'quiz': html += renderQuizForm(page); break;
       case 'empty_stylized': html += '<div class="stylized-divider">' + (page.content || '') + '</div>'; break;
-      default: html += '<div class="text-content">' + (page.content || '<p>Prázdný obsah</p>') + '</div>'; break;
+      default: html += '<div class="text-content">' + (page.content || '<p>' + i18n.empty + '</p>') + '</div>'; break;
     }
     display.innerHTML = html;
     if (page.type === 'quiz') {
@@ -185,10 +218,10 @@
   }
 
   function renderQuizForm(page) {
-    if (quizSubmitted[page.id]) return '<div class="quiz-result"><div class="label">Kvíz byl odeslán &#10003;</div></div>';
+    if (quizSubmitted[page.id]) return '<div class="quiz-result"><div class="label">' + i18n.quiz_submitted + ' &#10003;</div></div>';
     var quiz;
-    try { quiz = JSON.parse(page.content || '{}'); } catch(e) { return '<p>Chyba při načítání kvízu.</p>'; }
-    if (!quiz.questions || !quiz.questions.length) return '<p>Kvíz nemá žádné otázky.</p>';
+    try { quiz = JSON.parse(page.content || '{}'); } catch(e) { return '<p>' + i18n.quiz_error + '</p>'; }
+    if (!quiz.questions || !quiz.questions.length) return '<p>' + i18n.quiz_no_q + '</p>';
     var html = '<form id="quizForm" class="quiz-container">';
     quiz.questions.forEach(function(q, i) {
       html += '<div class="quiz-question"><div class="q-text">' + (i + 1) + '. ' + (q.text || q.question || '') + '</div>';
@@ -201,7 +234,7 @@
       }
       html += '</div>';
     });
-    html += '<button type="submit" class="quiz-submit">Odeslat odpovědi</button></form>';
+    html += '<button type="submit" class="quiz-submit">' + i18n.submit_answers + '</button></form>';
     return html;
   }
 
@@ -214,15 +247,59 @@
     socket.emit('submit_quiz', { pageId: pageId, answers: answers });
     quizSubmitted[pageId] = true;
     var btn = form.querySelector('.quiz-submit');
-    if (btn) { btn.disabled = true; btn.textContent = 'Odesláno...'; }
+    if (btn) { btn.disabled = true; btn.textContent = i18n.submitting; }
   }
 
-  function showQuizResult(score) {
+  function showQuizResult(score, answerResults) {
     var form = document.getElementById('quizForm');
     if (!form) return;
+    var pct = Math.round(score);
+    var scoreClass = pct >= 75 ? 'high' : (pct >= 50 ? 'medium' : 'low');
     var resultDiv = document.createElement('div');
     resultDiv.className = 'quiz-result';
-    resultDiv.innerHTML = '<div class="score">' + Math.round(score) + '%</div><div class="label">Vaše skóre</div>';
+    var html = '<div class="score ' + scoreClass + '">' + pct + '%</div><div class="label">' + i18n.your_score + '</div>';
+
+    // Show detailed answers
+    if (answerResults && typeof answerResults === 'object') {
+      html += '<div class="quiz-result-detail">';
+      // Get quiz data for question text
+      var currentPage = pages.find(function(p) { return p.id === currentViewPageId; });
+      var quizData = null;
+      try { quizData = currentPage ? JSON.parse(currentPage.content || '{}') : null; } catch(e) {}
+      var questions = quizData && quizData.questions ? quizData.questions : [];
+
+      for (var key in answerResults) {
+        var ar = answerResults[key];
+        var q = questions.find(function(qu) { return String(qu.id || questions.indexOf(qu)) === String(key); });
+        var qText = q ? (q.text || q.question || 'Otázka') : 'Otázka';
+        var correctLabel = '';
+        var studentLabel = '';
+
+        if (q && q.options) {
+          q.options.forEach(function(opt, j) {
+            var val = opt.value !== undefined ? String(opt.value) : String(j);
+            var label = opt.label || opt.text || opt;
+            if (val === String(ar.correctAnswer)) correctLabel = label;
+            if (val === String(ar.studentAnswer)) studentLabel = label;
+          });
+        }
+        if (!correctLabel) correctLabel = ar.correctAnswer;
+        if (!studentLabel) studentLabel = ar.studentAnswer;
+
+        html += '<div class="quiz-result-item ' + (ar.isCorrect ? 'correct' : 'incorrect') + '">';
+        html += '<span class="result-icon">' + (ar.isCorrect ? '✅' : '❌') + '</span>';
+        html += '<span class="result-text">' + qText + '</span>';
+        if (!ar.isCorrect) {
+          html += '<div class="result-answer">' + i18n.your_answer + ': ' + studentLabel + ' · ' + i18n.correct_answer + ': ' + correctLabel + '</div>';
+        } else {
+          html += '<div class="result-answer">' + i18n.correct_text + ': ' + correctLabel + '</div>';
+        }
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+
+    resultDiv.innerHTML = html;
     form.replaceWith(resultDiv);
   }
 
@@ -240,7 +317,7 @@
   function updateStateBanner() {
     var banner = document.getElementById('stateBanner');
     banner.className = 'state-banner ' + currentState;
-    var labels = { 'LIVE': 'Živé vysílání', 'PAUSED': 'Pozastaveno', 'ARCHIVED': 'Archivováno', 'DRAFT': 'Čekáme na zahájení...', 'SCHEDULED': 'Naplánováno' };
+    var labels = { 'LIVE': i18n.live, 'PAUSED': i18n.paused, 'ARCHIVED': i18n.archived, 'DRAFT': i18n.waiting, 'SCHEDULED': i18n.scheduled };
     banner.textContent = labels[currentState] || currentState;
   }
 

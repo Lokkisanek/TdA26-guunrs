@@ -242,15 +242,21 @@ export function initSocketIO(httpServer: HttpServer) {
 
         // Calculate score from answers (simple: check against content JSON)
         let score = 0;
+        const answerResults: Record<string, { studentAnswer: string; correctAnswer: string; isCorrect: boolean }> = {};
         try {
           const quizData = page.content ? JSON.parse(page.content) : null;
           if (quizData?.questions && Array.isArray(quizData.questions)) {
             let correct = 0;
             for (const q of quizData.questions) {
-              const studentAnswer = (payload.answers as Record<string, string>)[q.id];
-              if (studentAnswer !== undefined && String(studentAnswer) === String(q.correctAnswer)) {
-                correct++;
-              }
+              const qId = q.id ?? String(quizData.questions.indexOf(q));
+              const studentAnswer = (payload.answers as Record<string, string>)[qId];
+              const isCorrect = studentAnswer !== undefined && String(studentAnswer) === String(q.correctAnswer);
+              if (isCorrect) correct++;
+              answerResults[qId] = {
+                studentAnswer: String(studentAnswer ?? ""),
+                correctAnswer: String(q.correctAnswer),
+                isCorrect,
+              };
             }
             score = quizData.questions.length > 0 ? (correct / quizData.questions.length) * 100 : 0;
           }
@@ -268,7 +274,11 @@ export function initSocketIO(httpServer: HttpServer) {
           },
         });
 
-        socket.emit("quiz_result", { score: result.score, resultId: result.id });
+        socket.emit("quiz_result", {
+          score: result.score,
+          resultId: result.id,
+          answerResults,
+        });
 
         // Track quiz progress
         const progress = getQuizProgress(sessionId);

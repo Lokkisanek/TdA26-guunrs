@@ -3,11 +3,11 @@
 <footer class="site-footer">
   <div class="footer-inner">
     <div class="footer-left">
-      &copy; <%= new Date().getFullYear() %> guunrs. Všechna práva vyhrazena.
+      &copy; <%= new Date().getFullYear() %> guunrs. <%= typeof lang !== 'undefined' && lang === 'en' ? 'All rights reserved.' : 'Všechna práva vyhrazena.' %>
     </div>
     <div class="footer-right">
-      <a href="/privacy-policy">Ochrana soukromí</a>
-      <a href="/terms">Podmínky užití</a>
+      <a href="/privacy-policy"><%= typeof lang !== 'undefined' && lang === 'en' ? 'Privacy Policy' : 'Ochrana soukromí' %></a>
+      <a href="/terms"><%= typeof lang !== 'undefined' && lang === 'en' ? 'Terms of Use' : 'Podmínky užití' %></a>
     </div>
   </div>
 </footer>

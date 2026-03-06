@@ -1,22 +1,73 @@
 import { Router } from "express";
 import "express-session";
 import { isAuthenticated } from "../middleware/auth.js";
+import { t } from "../i18n.js";
 
 const USERNAME = "lecturer";
 const PASSWORD = "TdA26!";
 
 const router = Router();
 
+// ──────────── SITEMAP ────────────
+router.get("/sitemap.xml", async (req, res, next) => {
+  try {
+    const courses = await req.prisma.course.findMany({ orderBy: { createdAt: "desc" } });
+    const host = `${req.protocol}://${req.get("host")}`;
+    const urls = [
+      { loc: "/", priority: "1.0", changefreq: "daily" },
+      { loc: "/courses", priority: "0.9", changefreq: "daily" },
+      { loc: "/login", priority: "0.3", changefreq: "monthly" },
+      { loc: "/privacy-policy", priority: "0.2", changefreq: "yearly" },
+      { loc: "/terms", priority: "0.2", changefreq: "yearly" },
+      ...courses.map(c => ({ loc: `/courses/${c.id}`, priority: "0.8", changefreq: "weekly" as string })),
+    ];
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.map(u => `  <url>
+    <loc>${host}${u.loc}</loc>
+    <changefreq>${u.changefreq}</changefreq>
+    <priority>${u.priority}</priority>
+  </url>`).join("\n")}
+</urlset>`;
+    res.type("application/xml").send(xml);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ──────────── PUBLIC PAGES ────────────
 router.get("/", (_req, res) => {
-  res.render("home", { title: "TdA Academy" });
+  const lang = res.locals.lang;
+  res.render("home", {
+    title: "",
+    metaDescription: lang === "en"
+      ? "Think different Academy – Interactive online courses, live lessons and quizzes. Start learning today!"
+      : "Think different Academy – Interaktivní online kurzy, živé lekce a kvízy. Začněte se učit ještě dnes!",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "EducationalOrganization",
+      "name": "Think different Academy",
+      "description": lang === "en"
+        ? "Interactive online learning platform with courses, live sessions and quizzes."
+        : "Interaktivní online vzdělávací platforma s kurzy, živými relacemi a kvízy.",
+      "url": "/",
+      "logo": "/favicon.png",
+    },
+  });
 });
 
 router.get("/privacy-policy", (_req, res) => {
-  res.render("privacy-policy", { title: "Ochrana soukromí" });
+  res.render("privacy-policy", {
+    title: t("privacy_policy", res.locals.lang),
+    noIndex: true,
+  });
 });
 
 router.get("/terms", (_req, res) => {
-  res.render("terms", { title: "Podmínky užití" });
+  res.render("terms", {
+    title: t("terms_of_use", res.locals.lang),
+    noIndex: true,
+  });
 });
 
 router.get("/courses", async (req, res, next) => {
@@ -34,7 +85,32 @@ router.get("/courses", async (req, res, next) => {
       orderBy: { createdAt: "desc" },
     });
 
-    res.render("courses", { title: "Kurzy", courses, search });
+    const lang = res.locals.lang;
+    res.render("courses", {
+      title: t("courses", lang),
+      courses,
+      search,
+      metaDescription: lang === "en"
+        ? "Browse all available courses at Think different Academy. Find interactive lessons, quizzes and live sessions."
+        : "Procházejte všechny dostupné kurzy na Think different Academy. Najděte interaktivní lekce, kvízy a živé relace.",
+      jsonLd: {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": lang === "en" ? "Courses" : "Kurzy",
+        "numberOfItems": courses.length,
+        "itemListElement": courses.slice(0, 10).map((c: any, i: number) => ({
+          "@type": "ListItem",
+          "position": i + 1,
+          "item": {
+            "@type": "Course",
+            "name": c.title,
+            "description": c.shortDescription || "",
+            "url": `/courses/${c.id}`,
+            "provider": { "@type": "Organization", "name": "Think different Academy" },
+          },
+        })),
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -54,10 +130,28 @@ router.get("/courses/:id", async (req, res, next) => {
         },
       },
     });
-    res.status(course ? 200 : 404).render("course-detail", {
-      title: course ? course.title : "Kurz nenalezen",
+    const lang = res.locals.lang;
+    const seo: Record<string, any> = {
+      title: course ? course.title : t("course_not_found", lang),
       course,
-    });
+    };
+    if (course) {
+      seo.metaDescription = course.shortDescription || course.title;
+      seo.ogType = "article";
+      seo.jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "Course",
+        "name": course.title,
+        "description": course.shortDescription || course.description || course.title,
+        "provider": { "@type": "Organization", "name": "Think different Academy", "url": "/" },
+        "hasCourseInstance": course.lessons?.map((l: any) => ({
+          "@type": "CourseInstance",
+          "name": l.title,
+          "courseMode": "online",
+        })) || [],
+      };
+    }
+    res.status(course ? 200 : 404).render("course-detail", seo);
   } catch (error) {
     next(error);
   }
@@ -66,7 +160,7 @@ router.get("/courses/:id", async (req, res, next) => {
 router
   .route("/login")
   .get((req, res) => {
-    res.render("login", { title: "Přihlášení", error: null });
+    res.render("login", { title: t("login_title", res.locals.lang), error: null, noIndex: true });
   })
   .post((req, res) => {
     const { username, password } = req.body;
@@ -78,8 +172,9 @@ router
     }
 
     res.status(401).render("login", {
-      title: "Přihlášení",
-      error: "Neplatné přihlašovací údaje",
+      title: t("login_title", res.locals.lang),
+      error: t("invalid_credentials", res.locals.lang),
+      noIndex: true,
     });
   });
 
@@ -101,7 +196,7 @@ router.get("/dashboard", isAuthenticated, async (req, res, next) => {
         },
       },
     });
-    res.render("dashboard", { title: "Dashboard", courses });
+    res.render("dashboard", { title: "Dashboard", courses, noIndex: true });
   } catch (error) {
     next(error);
   }
@@ -225,7 +320,7 @@ router.get("/dashboard/lessons/:id", isAuthenticated, async (req, res, next) => 
       },
     });
     if (!lesson) return res.redirect("/dashboard");
-    res.render("lesson-manage", { title: `Lekce: ${lesson.title}`, lesson });
+    res.render("lesson-manage", { title: `${t("lessons", res.locals.lang)}: ${lesson.title}`, lesson, noIndex: true });
   } catch (error) {
     next(error);
   }
@@ -315,11 +410,12 @@ router.get("/classroom/teacher/:sessionId", isAuthenticated, async (req, res, ne
         activePage: true,
       },
     });
-    if (!session) return res.status(404).render("error", { title: "Chyba", message: "Relace nenalezena." });
+    if (!session) return res.status(404).render("error", { title: t("error", res.locals.lang), message: t("something_went_wrong", res.locals.lang) });
     res.render("teacher-live", {
-      title: `Živá lekce — ${session.lesson.title}`,
+      title: `${t("live_broadcast", res.locals.lang)} — ${session.lesson.title}`,
       session,
       lesson: session.lesson,
+      noIndex: true,
     });
   } catch (error) {
     next(error);
@@ -341,16 +437,17 @@ router.get("/classroom/student/:sessionId", async (req, res, next) => {
         activePage: true,
       },
     });
-    if (!session) return res.status(404).render("error", { title: "Chyba", message: "Relace nenalezena." });
+    if (!session) return res.status(404).render("error", { title: t("error", res.locals.lang), message: t("something_went_wrong", res.locals.lang) });
 
     // Filter published pages for student
     const publishedPages = session.lesson.pages.filter((p) => p.isPublished);
 
     res.render("student-classroom", {
-      title: `Učebna — ${session.lesson.title}`,
+      title: `${t("lesson_content", res.locals.lang)} — ${session.lesson.title}`,
       session,
       lesson: session.lesson,
       publishedPages,
+      noIndex: true,
     });
   } catch (error) {
     next(error);

@@ -1,9 +1,9 @@
-<%- include('partials/header', { title: 'Chyba' }) %>
+<%- include('partials/header', { title: typeof title !== 'undefined' ? title : t('error') }) %>
 
 <div class="container-sm" style="text-align:center; padding-top:4rem; padding-bottom:4rem;">
-  <h1 style="color:var(--brand-blue-dark); margin-bottom:1rem;">Chyba</h1>
-  <p style="color:#555; font-size:1.1rem; margin-bottom:2rem;"><%= typeof message !== 'undefined' && message ? message : 'Něco se pokazilo.' %></p>
-  <a href="/" class="btn">Zpět na hlavní stránku</a>
+  <h1 style="color:var(--brand-blue-dark); margin-bottom:1rem;"><%= typeof title !== 'undefined' && title ? title : t('error') %></h1>
+  <p style="color:#555; font-size:1.1rem; margin-bottom:2rem;"><%= typeof message !== 'undefined' && message ? message : t('something_went_wrong') %></p>
+  <a href="/" class="btn"><%= t('back_to_home') %></a>
 </div>
 
 <%- include('partials/footer') %>

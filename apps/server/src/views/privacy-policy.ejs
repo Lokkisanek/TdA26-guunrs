@@ -1,4 +1,4 @@
-<%- include('partials/header', { title: 'Ochrana soukromí' }) %>
+<%- include('partials/header', { title }) %>
 <style>
   h1 { color: var(--brand-primary); margin-bottom: 1.5rem; }
   h2 { color: #333; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.25rem; }
@@ -8,7 +8,7 @@
 </style>
 
 <div class="container-sm">
-  <a href="/" class="back-link">← Zpět na hlavní stránku</a>
+  <a href="/" class="back-link">&larr; <%= t('back_to_home') %></a>
 
   <h1>Zásady ochrany osobních údajů</h1>
   <p class="last-updated">Poslední aktualizace: 12. prosince 2025</p>

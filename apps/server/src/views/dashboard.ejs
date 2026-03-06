@@ -1,53 +1,112 @@
 <%- include('partials/header', { title: 'Dashboard' }) %>
+<style>
+  .tutorial-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:flex-start; padding:2rem; overflow-y:auto; }
+  .tutorial-overlay.active { display:flex; }
+  .tutorial-box { background:#fff; max-width:680px; width:100%; border-top:6px solid var(--brand-primary); padding:2rem; margin:2rem 0; }
+  .tutorial-box h2 { color:var(--brand-blue-dark); margin-bottom:1rem; font-size:1.5rem; }
+  .tutorial-box .welcome-text { font-size:1.1rem; color:#555; margin-bottom:1.5rem; line-height:1.6; }
+  .tutorial-step { padding:1rem; margin-bottom:0.75rem; background:#f8f9fa; border-left:4px solid var(--brand-primary); }
+  .tutorial-step h3 { color:var(--brand-blue-dark); margin-bottom:0.35rem; font-size:1.05rem; }
+  .tutorial-step p { color:#555; font-size:0.95rem; line-height:1.5; margin:0; }
+  .tutorial-close-btn { margin-top:1.5rem; padding:0.85rem 2rem; background:var(--brand-primary); color:#fff; border:none; border-radius:6px; font-size:1rem; font-weight:700; cursor:pointer; font-family:inherit; display:block; width:100%; }
+  .tutorial-close-btn:hover { filter:brightness(1.08); }
+  .tutorial-trigger { background:none; border:2px solid var(--brand-primary); color:var(--brand-primary); padding:0.4rem 0.8rem; border-radius:6px; font-size:0.85rem; font-weight:700; cursor:pointer; font-family:inherit; }
+  .tutorial-trigger:hover { background:var(--brand-primary); color:#fff; }
+
+  /* Toast notification */
+  .toast { position:fixed; bottom:2rem; right:2rem; background:#28a745; color:#fff; padding:0.85rem 1.5rem; border-radius:6px; font-weight:700; font-size:0.95rem; z-index:3000; transform:translateY(120%); opacity:0; visibility:hidden; pointer-events:none; transition:transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease; box-shadow:0 4px 12px rgba(0,0,0,0.15); }
+  .toast.show { transform:translateY(0); opacity:1; visibility:visible; pointer-events:auto; }
+  .toast.error { background:#dc3545; }
+</style>
+
+<!-- Tutorial Overlay -->
+<div class="tutorial-overlay" id="tutorialOverlay">
+  <div class="tutorial-box">
+    <h2><%= t('tutorial_title') %></h2>
+    <p class="welcome-text"><%= t('tutorial_welcome') %></p>
+
+    <div class="tutorial-step">
+      <h3><%= t('tutorial_step1_title') %></h3>
+      <p><%= t('tutorial_step1_desc') %></p>
+    </div>
+    <div class="tutorial-step">
+      <h3><%= t('tutorial_step2_title') %></h3>
+      <p><%= t('tutorial_step2_desc') %></p>
+    </div>
+    <div class="tutorial-step">
+      <h3><%= t('tutorial_step3_title') %></h3>
+      <p><%= t('tutorial_step3_desc') %></p>
+    </div>
+    <div class="tutorial-step">
+      <h3><%= t('tutorial_step4_title') %></h3>
+      <p><%= t('tutorial_step4_desc') %></p>
+    </div>
+    <div class="tutorial-step">
+      <h3><%= t('tutorial_step5_title') %></h3>
+      <p><%= t('tutorial_step5_desc') %></p>
+    </div>
+    <div class="tutorial-step">
+      <h3><%= t('tutorial_step6_title') %></h3>
+      <p><%= t('tutorial_step6_desc') %></p>
+    </div>
+
+    <button class="tutorial-close-btn" id="closeTutorial"><%= t('tutorial_close') %></button>
+  </div>
+</div>
 
 <div class="container">
-  <h1 style="color:var(--brand-blue-dark); margin-bottom:0.5rem;">Dashboard</h1>
-  <p class="subtitle">Správa kurzů a lekcí</p>
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem;">
+    <div>
+      <h1 style="color:var(--brand-blue-dark); margin-bottom:0.25rem;">Dashboard</h1>
+      <p class="subtitle"><%= t('manage_courses') %></p>
+    </div>
+    <button class="tutorial-trigger" id="showTutorial">❓ <%= t('tutorial_show') %></button>
+  </div>
 
   <!-- Add course -->
   <div class="card">
-    <h2>Přidat nový kurz</h2>
+    <h2><%= t('add_new_course') %></h2>
     <form method="POST" action="/dashboard">
       <div class="form-row">
         <div class="form-group">
-          <label for="title">Název kurzu *</label>
+          <label for="title"><%= t('course_title') %> *</label>
           <input type="text" id="title" name="title" required>
         </div>
         <div class="form-group">
-          <label for="shortDescription">Krátký popis *</label>
+          <label for="shortDescription"><%= t('short_description') %> *</label>
           <input type="text" id="shortDescription" name="shortDescription" required>
         </div>
       </div>
       <div class="form-group">
-        <label for="description">Popis</label>
+        <label for="description"><%= t('description') %></label>
         <textarea id="description" name="description"></textarea>
       </div>
-      <button type="submit" class="btn">Přidat kurz</button>
+      <button type="submit" class="btn"><%= t('add_course') %></button>
     </form>
   </div>
 
   <!-- Courses list -->
   <div class="card">
-    <h2>Seznam kurzů</h2>
+    <h2><%= t('course_list') %></h2>
     <% if (courses.length > 0) { %>
       <table>
         <thead>
           <tr>
-            <th>Název</th>
-            <th>Krátký popis</th>
-            <th>Akce</th>
+            <th><%= t('title') %></th>
+            <th><%= t('short_description') %></th>
+            <th><%= t('actions') %></th>
           </tr>
         </thead>
         <tbody>
           <% courses.forEach(function(course) { %>
             <tr>
-              <td data-label="Název"><%= course.title %></td>
-              <td data-label="Popis"><%= course.shortDescription || '-' %></td>
-              <td data-label="Akce" class="actions">
-                <a href="/courses/<%= course.id %>" class="btn btn-secondary btn-sm">Zobrazit</a>
-                <button type="button" class="btn btn-sm" onclick="toggleEdit('<%= course.id %>')">Upravit</button>
-                <form method="POST" action="/dashboard/<%= course.id %>?_method=DELETE" onsubmit="return confirm('Opravdu chcete smazat tento kurz?');">
-                  <button type="submit" class="btn btn-danger btn-sm">Smazat</button>
+              <td data-label="<%= t('title') %>"><%= course.title %></td>
+              <td data-label="<%= t('short_description') %>"><%= course.shortDescription || '-' %></td>
+              <td data-label="<%= t('actions') %>" class="actions">
+                <a href="/courses/<%= course.id %>" class="btn btn-secondary btn-sm"><%= t('view') %></a>
+                <button type="button" class="btn btn-sm" onclick="toggleEdit('<%= course.id %>')"><%= t('edit') %></button>
+                <form method="POST" action="/dashboard/<%= course.id %>?_method=DELETE" onsubmit="return confirm('<%= t('delete_course_confirm') %>');">
+                  <button type="submit" class="btn btn-danger btn-sm"><%= t('delete') %></button>
                 </form>
               </td>
             </tr>
@@ -57,20 +116,20 @@
                   <form method="POST" action="/dashboard/<%= course.id %>?_method=PUT">
                     <div class="form-row">
                       <div class="form-group">
-                        <label>Název kurzu</label>
+                        <label><%= t('course_title') %></label>
                         <input type="text" name="title" value="<%= course.title %>" required>
                       </div>
                       <div class="form-group">
-                        <label>Krátký popis</label>
+                        <label><%= t('short_description') %></label>
                         <input type="text" name="shortDescription" value="<%= course.shortDescription || '' %>">
                       </div>
                     </div>
                     <div class="form-group">
-                      <label>Popis</label>
+                      <label><%= t('description') %></label>
                       <textarea name="description"><%= course.description || '' %></textarea>
                     </div>
-                    <button type="submit" class="btn btn-sm">Uložit změny</button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleEdit('<%= course.id %>')">Zrušit</button>
+                    <button type="submit" class="btn btn-sm"><%= t('save_changes') %></button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleEdit('<%= course.id %>')"><%= t('cancel') %></button>
                   </form>
                 </div>
               </td>
@@ -81,10 +140,10 @@
               <td colspan="3" style="padding:0.5rem 0; border:none;">
                 <div class="lessons-section" style="margin-top:0; padding-top:0.5rem; border-top:none;">
                   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem;">
-                    <strong style="color:var(--brand-blue-dark);">Lekce kurzu</strong>
+                    <strong style="color:var(--brand-blue-dark);"><%= t('course_lessons') %></strong>
                     <form method="POST" action="/dashboard/courses/<%= course.id %>/lessons" style="display:inline-flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-                      <input type="text" name="title" placeholder="Název lekce" style="padding:0.35rem 0.6rem;border:1px solid rgba(0,0,0,0.06);font-size:0.9rem;font-family:inherit;">
-                      <button type="submit" class="btn btn-success btn-sm">+ Lekce</button>
+                      <input type="text" name="title" placeholder="<%= t('lesson_name') %>" style="padding:0.35rem 0.6rem;border:1px solid rgba(0,0,0,0.06);font-size:0.9rem;font-family:inherit;">
+                      <button type="submit" class="btn btn-success btn-sm"><%= t('new_lesson') %></button>
                     </form>
                   </div>
                   <% if (course.lessons && course.lessons.length > 0) { %>
@@ -94,24 +153,24 @@
                           <div>
                             <h3 style="margin:0;"><%= lesson.title %></h3>
                             <div class="lesson-meta" style="margin-top:0.25rem;">
-                              <span class="pages-count"><%= lesson._count ? lesson._count.pages : 0 %> stránek</span>
-                              <span><%= lesson._count ? lesson._count.liveSessions : 0 %> relací</span>
+                              <span class="pages-count"><%= lesson._count ? lesson._count.pages : 0 %> <%= t('pages') %></span>
+                              <span><%= lesson._count ? lesson._count.liveSessions : 0 %> <%= t('sessions') %></span>
                             </div>
                           </div>
                           <div class="actions">
-                            <a href="/dashboard/lessons/<%= lesson.id %>" class="btn btn-sm">Spravovat</a>
+                            <a href="/dashboard/lessons/<%= lesson.id %>" class="btn btn-sm"><%= t('manage') %></a>
                             <form method="POST" action="/dashboard/lessons/<%= lesson.id %>/duplicate" style="display:inline;">
-                              <button type="submit" class="btn btn-secondary btn-sm">Duplikovat</button>
+                              <button type="submit" class="btn btn-secondary btn-sm"><%= t('duplicate') %></button>
                             </form>
-                            <form method="POST" action="/dashboard/lessons/<%= lesson.id %>/delete" onsubmit="return confirm('Smazat lekci?');" style="display:inline;">
-                              <button type="submit" class="btn btn-danger btn-sm">Smazat</button>
+                            <form method="POST" action="/dashboard/lessons/<%= lesson.id %>/delete" onsubmit="return confirm('<%= t('delete_lesson_confirm') %>');" style="display:inline;">
+                              <button type="submit" class="btn btn-danger btn-sm"><%= t('delete') %></button>
                             </form>
                           </div>
                         </div>
                       </div>
                     <% }) %>
                   <% } else { %>
-                    <p style="color:#888;font-style:italic;font-size:0.9rem;">Žádné lekce. Přidejte první výše.</p>
+                    <p style="color:#888;font-style:italic;font-size:0.9rem;"><%= t('no_lessons') %></p>
                   <% } %>
                 </div>
               </td>
@@ -120,16 +179,42 @@
         </tbody>
       </table>
     <% } else { %>
-      <p>Zatím nejsou žádné kurzy. Přidejte první kurz výše.</p>
+      <p><%= t('no_courses_yet') %></p>
     <% } %>
   </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
   function toggleEdit(id) {
     var form = document.getElementById('edit-' + id);
     if (form) form.classList.toggle('active');
   }
+
+  // Tutorial logic
+  (function() {
+    var overlay = document.getElementById('tutorialOverlay');
+    var showBtn = document.getElementById('showTutorial');
+    var closeBtn = document.getElementById('closeTutorial');
+
+    // Show tutorial on first visit (check localStorage)
+    if (!localStorage.getItem('tda_tutorial_seen')) {
+      overlay.classList.add('active');
+    }
+
+    showBtn.addEventListener('click', function() { overlay.classList.add('active'); });
+    closeBtn.addEventListener('click', function() {
+      overlay.classList.remove('active');
+      localStorage.setItem('tda_tutorial_seen', '1');
+    });
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) {
+        overlay.classList.remove('active');
+        localStorage.setItem('tda_tutorial_seen', '1');
+      }
+    });
+  })();
 </script>
 
 <%- include('partials/footer') %>

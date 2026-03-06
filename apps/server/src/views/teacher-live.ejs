@@ -47,64 +47,64 @@
 </style>
 
 <div class="container">
-<a href="/dashboard" class="back-link">&larr; Zpět na dashboard</a>
+<a href="/dashboard" class="back-link">&larr; <%= t('back_to_dashboard') %></a>
 
 <div class="lesson-header">
   <h1><%= lesson.title %></h1>
-  <p class="meta">Kurz: <%= lesson.course.title %> &middot; Session: <span id="sessionId"><%= session.id %></span></p>
+  <p class="meta"><%= t('courses') %>: <%= lesson.course.title %> &middot; Session: <span id="sessionId"><%= session.id %></span></p>
 </div>
 
 <div class="teacher-layout">
   <!-- LEFT: Content Browser -->
   <div>
     <div class="panel">
-      <h2>Stránky lekce</h2>
+      <h2><%= t('lesson_pages_title') %></h2>
       <ul class="page-list" id="pageList">
         <% lesson.pages.forEach(page => { %>
           <li class="page-item" data-id="<%= page.id %>" data-published="<%= page.isPublished %>">
             <span class="page-title"><%= page.title %></span>
             <span class="page-type"><%= page.type %></span>
             <% if (!page.isPublished) { %><span class="draft-badge">Draft</span><% } %>
-            <button class="visibility-toggle" title="Přepnout viditelnost" data-page-id="<%= page.id %>"><%= page.isPublished ? '👁️' : '🚫' %></button>
-            <button class="push-btn" data-page-id="<%= page.id %>" title="Přesunout studenty na tuto stránku">Push</button>
+            <button class="visibility-toggle" title="<%= t('toggle_visibility') %>" data-page-id="<%= page.id %>"><%= page.isPublished ? '👁️' : '🚫' %></button>
+            <button class="push-btn" data-page-id="<%= page.id %>" title="<%= t('push_students') %>">Push</button>
           </li>
         <% }) %>
       </ul>
     </div>
     <div class="panel">
-      <h2>Ovládání relace</h2>
-      <div style="margin-bottom: 0.75rem;">Stav: <span class="current-state <%= session.currentState %>" id="currentState"><%= session.currentState %></span></div>
+      <h2><%= t('session_control') %></h2>
+      <div style="margin-bottom: 0.75rem;"><%= t('state') %>: <span class="current-state <%= session.currentState %>" id="currentState"><%= session.currentState %></span></div>
       <div class="state-controls">
-        <button class="state-btn schedule" onclick="sendCommand('set_state', 'SCHEDULED')" id="btnSchedule">Naplánovat</button>
-        <button class="state-btn live" onclick="sendCommand('set_state', 'LIVE')" id="btnLive">&#9654; Spustit</button>
-        <button class="state-btn pause" onclick="sendCommand('set_state', 'PAUSED')" id="btnPause">&#9208; Pauza</button>
-        <button class="state-btn end" onclick="sendCommand('set_state', 'ARCHIVED')" id="btnEnd">&#9209; Ukončit</button>
+        <button class="state-btn schedule" onclick="sendCommand('set_state', 'SCHEDULED')" id="btnSchedule"><%= t('schedule') %></button>
+        <button class="state-btn live" onclick="sendCommand('set_state', 'LIVE')" id="btnLive">&#9654; <%= t('start') %></button>
+        <button class="state-btn pause" onclick="sendCommand('set_state', 'PAUSED')" id="btnPause">&#9208; <%= t('pause') %></button>
+        <button class="state-btn end" onclick="sendCommand('set_state', 'ARCHIVED')" id="btnEnd">&#9209; <%= t('end_session') %></button>
       </div>
     </div>
   </div>
 
   <!-- CENTER: Content Preview -->
   <div class="preview-panel panel">
-    <h2>Náhled stránky</h2>
+    <h2><%= t('page_preview') %></h2>
     <div class="preview-content" id="previewContent">
-      <div class="preview-empty">Vyberte stránku z levého panelu pro náhled</div>
+      <div class="preview-empty"><%= t('select_page_preview') %></div>
     </div>
   </div>
 
   <!-- RIGHT: Live Analytics -->
   <div>
     <div class="panel">
-      <h2>Živé statistiky</h2>
-      <div class="stat-card"><div class="stat-label">Online studentů</div><div class="stat-value" id="onlineCount">0</div></div>
-      <div class="stat-card"><div class="stat-label">Na aktuální stránce</div><div class="stat-value" id="pagePresenceCount">0</div></div>
+      <h2><%= t('live_stats') %></h2>
+      <div class="stat-card"><div class="stat-label"><%= t('online_students') %></div><div class="stat-value" id="onlineCount">0</div></div>
+      <div class="stat-card"><div class="stat-label"><%= t('on_current_page') %></div><div class="stat-value" id="pagePresenceCount">0</div></div>
     </div>
     <div class="panel">
-      <h2>Kvíz — průběh</h2>
-      <div id="quizProgressContainer"><p style="color:#aaa;font-size:0.85rem;">Žádný kvíz není aktivní.</p></div>
+      <h2><%= t('quiz_progress') %></h2>
+      <div id="quizProgressContainer"><p style="color:#aaa;font-size:0.85rem;"><%= t('no_quiz_active') %></p></div>
     </div>
     <div class="panel">
-      <h2>Přítomní studenti</h2>
-      <ul class="presence-list" id="presenceList"><li style="color:#aaa;">Nikdo není online.</li></ul>
+      <h2><%= t('present_students') %></h2>
+      <ul class="presence-list" id="presenceList"><li style="color:#aaa;"><%= t('nobody_online') %></li></ul>
     </div>
   </div>
 </div>
@@ -113,6 +113,20 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
 (function() {
+  var i18n = {
+    error: '<%= t("error") %>',
+    nobody_on_page: '<%= t("nobody_on_page") %>',
+    nobody_online: '<%= t("nobody_online") %>',
+    no_quiz_active: '<%= t("no_quiz_active") %>',
+    page_type: '<%= t("page_type") %>',
+    published: '<%= t("published") %>',
+    draft: '<%= t("draft") %>',
+    video: '<%= t("video") %>',
+    video_unavailable: '<%= t("video_unavailable") %>',
+    quiz_page: '<%= t("quiz") %>',
+    visual_divider: '<%= t("visual_divider") %>',
+    empty_content: '<%= t("empty_content") %>'
+  };
   var SESSION_ID = '<%= session.id %>';
   var INSTRUCTOR_ID = '<%= user.username %>';
   var currentActivePageId = '<%= session.activePageId || "" %>';
@@ -124,7 +138,7 @@
   });
 
   socket.on('connect', function() { socket.emit('request_state_recovery'); });
-  socket.on('error_msg', function(data) { alert('Chyba: ' + data.message); });
+  socket.on('error_msg', function(data) { alert(i18n.error + ': ' + data.message); });
 
   socket.on('state_recovery', function(data) {
     currentState = data.state; currentActivePageId = data.activePageId || '';
@@ -167,8 +181,8 @@
       }
       presenceList.innerHTML = allStudents.length > 0
         ? allStudents.map(function(s) { return '<li><span class="presence-dot"></span> ' + s + '</li>'; }).join('')
-        : '<li style="color:#aaa;">Nikdo není na stránce.</li>';
-    } else { presenceList.innerHTML = '<li style="color:#aaa;">Nikdo není online.</li>'; }
+        : '<li style="color:#aaa;">' + i18n.nobody_on_page + '</li>';
+    } else { presenceList.innerHTML = '<li style="color:#aaa;">' + i18n.nobody_online + '</li>'; }
 
     var container = document.getElementById('quizProgressContainer');
     if (data.quizSubmissions && Object.keys(data.quizSubmissions).length > 0) {
@@ -180,7 +194,7 @@
         html += '<div style="margin-bottom:0.5rem;"><div style="font-size:0.85rem;font-weight:600;margin-bottom:0.2rem;">' + (pg2 ? pg2.title : pageId) + '</div><div class="quiz-bar"><div class="quiz-bar-fill" style="width:' + pct + '%"></div><div class="quiz-bar-label">' + count + '/' + data.totalStudents + ' (' + pct + '%)</div></div></div>';
       }
       container.innerHTML = html;
-    } else { container.innerHTML = '<p style="color:#aaa;font-size:0.85rem;">Žádný kvíz není aktivní.</p>'; }
+    } else { container.innerHTML = '<p style="color:#aaa;font-size:0.85rem;">' + i18n.no_quiz_active + '</p>'; }
   });
 
   window.sendCommand = function(command, value) { socket.emit('instructor_command', { command: command, value: value }); };
@@ -200,16 +214,16 @@
 
   function showPreview(page) {
     var container = document.getElementById('previewContent');
-    var html = '<h3>' + page.title + '</h3><p style="font-size:0.8rem;color:#888;margin-bottom:0.75rem;">Typ: ' + page.type + ' &middot; ' + (page.isPublished ? 'Publikováno' : '&#9888; Draft') + '</p>';
+    var html = '<h3>' + page.title + '</h3><p style="font-size:0.8rem;color:#888;margin-bottom:0.75rem;">' + i18n.page_type + ': ' + page.type + ' &middot; ' + (page.isPublished ? i18n.published : '&#9888; ' + i18n.draft) + '</p>';
     if (page.type === 'video') {
-      html += '<div style="background:#000;color:#fff;padding:2rem;text-align:center;border-radius:4px;">🎬 Video<br><small>' + (page.content || 'URL neuvedena') + '</small></div>';
+      html += '<div style="background:#000;color:#fff;padding:2rem;text-align:center;border-radius:4px;">🎬 ' + i18n.video + '<br><small>' + (page.content || i18n.video_unavailable) + '</small></div>';
     } else if (page.type === 'quiz') {
-      html += '<div style="background:#fff3cd;padding:1rem;border-radius:4px;">📝 Kvízová stránka</div>';
+      html += '<div style="background:#fff3cd;padding:1rem;border-radius:4px;">📝 ' + i18n.quiz_page + '</div>';
       try { var quiz = JSON.parse(page.content || '{}'); if (quiz.questions) { html += '<div style="margin-top:0.75rem;">'; quiz.questions.forEach(function(q, i) { html += '<div style="padding:0.5rem 0;border-bottom:1px solid #eee;"><strong>' + (i+1) + '.</strong> ' + (q.text || q.question || '') + '</div>'; }); html += '</div>'; } } catch(e) {}
     } else if (page.type === 'empty_stylized') {
-      html += '<div style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:3rem;text-align:center;border-radius:4px;font-size:1.3rem;font-weight:700;">' + (page.content || 'Vizuální oddělovač') + '</div>';
+      html += '<div style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:3rem;text-align:center;border-radius:4px;font-size:1.3rem;font-weight:700;">' + (page.content || i18n.visual_divider) + '</div>';
     } else {
-      html += '<div style="line-height:1.8;">' + (page.content || '<em>Prázdný obsah</em>') + '</div>';
+      html += '<div style="line-height:1.8;">' + (page.content || '<em>' + i18n.empty_content + '</em>') + '</div>';
     }
     container.innerHTML = html;
   }

@@ -1,10 +1,62 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="<%= typeof lang !== 'undefined' && lang === 'en' ? 'en' : 'cs' %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title ? `${title} | Think different Academy` : 'Think different Academy' %></title>
+
+  <%# ── SEO Meta ── %>
+  <% var pageTitle = title ? title + ' | Think different Academy' : 'Think different Academy'; %>
+  <% var defaultDescCS = 'Think different Academy – Interaktivní online kurzy, lekce, kvízy a živé výukové relace pro studenty i lektory.'; %>
+  <% var defaultDescEN = 'Think different Academy – Interactive online courses, lectures, quizzes and live classroom sessions for students and lecturers.'; %>
+  <% var desc = typeof metaDescription !== 'undefined' && metaDescription ? metaDescription : (typeof lang !== 'undefined' && lang === 'en' ? defaultDescEN : defaultDescCS); %>
+  <% var ogImage = typeof metaImage !== 'undefined' && metaImage ? metaImage : '/favicon.png'; %>
+  <% var canonicalPath = typeof canonical !== 'undefined' && canonical ? canonical : ''; %>
+  <% var pageType = typeof ogType !== 'undefined' && ogType ? ogType : 'website'; %>
+
+  <title><%= pageTitle %></title>
+  <meta name="description" content="<%= desc %>">
+  <meta name="robots" content="<%= typeof noIndex !== 'undefined' && noIndex ? 'noindex, nofollow' : 'index, follow' %>">
+  <% if (canonicalPath) { %><link rel="canonical" href="<%= canonicalPath %>">\n<% } %>
+
+  <%# ── Open Graph ── %>
+  <meta property="og:site_name" content="Think different Academy">
+  <meta property="og:title" content="<%= pageTitle %>">
+  <meta property="og:description" content="<%= desc %>">
+  <meta property="og:type" content="<%= pageType %>">
+  <meta property="og:image" content="<%= ogImage %>">
+  <meta property="og:locale" content="<%= typeof lang !== 'undefined' && lang === 'en' ? 'en_US' : 'cs_CZ' %>">
+
+  <%# ── Twitter Card ── %>
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="<%= pageTitle %>">
+  <meta name="twitter:description" content="<%= desc %>">
+  <meta name="twitter:image" content="<%= ogImage %>">
+
+  <%# ── Technical ── %>
+  <meta name="theme-color" content="#0070BB">
+  <meta name="author" content="Think different Academy">
+  <meta name="generator" content="TdA LMS v2.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/favicon.png">
   <link rel="stylesheet" href="/styles.css">
+
+  <%# ── JSON-LD Structured Data ── %>
+  <% if (typeof jsonLd !== 'undefined' && jsonLd) { %>
+  <script type="application/ld+json"><%- JSON.stringify(jsonLd) %></script>
+  <% } else { %>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "Think different Academy",
+    "url": "/",
+    "logo": "/favicon.png",
+    "description": "<%= desc.replace(/"/g, '\\"') %>",
+    "sameAs": []
+  }
+  </script>
+  <% } %>
 </head>
 <body>
 <div class="nav-overlay" id="navOverlay"></div>
@@ -16,8 +68,8 @@
         <img src="/img/Think-different-Academy_LOGO_oficialni-bile.svg" alt="TdA" class="logo-small white">
       </a>
       <div class="nav-main">
-        <a href="/">Domů</a>
-        <a href="/courses">Kurzy</a>
+        <a href="/"><%= typeof lang !== 'undefined' && lang === 'en' ? 'Home' : 'Domů' %></a>
+        <a href="/courses"><%= typeof lang !== 'undefined' && lang === 'en' ? 'Courses' : 'Kurzy' %></a>
       </div>
     </div>
 
@@ -35,18 +87,22 @@
       </div>
 
       <div class="nav-main-mobile">
-        <a href="/">Domů</a>
-        <a href="/courses">Kurzy</a>
+        <a href="/"><%= typeof lang !== 'undefined' && lang === 'en' ? 'Home' : 'Domů' %></a>
+        <a href="/courses"><%= typeof lang !== 'undefined' && lang === 'en' ? 'Courses' : 'Kurzy' %></a>
       </div>
 
       <div class="nav-right">
+        <div class="lang-switch">
+          <a href="?lang=cs" class="lang-btn <%= typeof lang === 'undefined' || lang === 'cs' ? 'active' : '' %>" title="Čeština">CS</a>
+          <a href="?lang=en" class="lang-btn <%= typeof lang !== 'undefined' && lang === 'en' ? 'active' : '' %>" title="English">EN</a>
+        </div>
         <% if (user) { %>
           <a href="/dashboard">Dashboard</a>
           <form method="post" action="/logout">
-            <button type="submit">Odhlásit<% if (user && user.username) { %> (<%= user.username %>)<% } %></button>
+            <button type="submit"><%= typeof lang !== 'undefined' && lang === 'en' ? 'Logout' : 'Odhlásit' %><% if (user && user.username) { %> (<%= user.username %>)<% } %></button>
           </form>
         <% } else { %>
-          <a href="/login">Přihlásit</a>
+          <a href="/login"><%= typeof lang !== 'undefined' && lang === 'en' ? 'Login' : 'Přihlásit' %></a>
         <% } %>
       </div>
     </div>

@@ -7,9 +7,14 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install
 
-COPY server.js ./
-COPY views ./views
+# Copy Prisma schema and generate client
+COPY prisma ./prisma
+RUN npx prisma generate
+
+# Copy source code and assets
+COPY src ./src
 COPY public ./public
+COPY tsconfig.json ./
 
 # Create uploads directory
 RUN mkdir -p /app/uploads
@@ -17,4 +22,5 @@ RUN mkdir -p /app/uploads
 ENV PORT=3000
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+# Run Prisma migrations and start with tsx
+CMD npx prisma migrate deploy && npx tsx src/index.ts
