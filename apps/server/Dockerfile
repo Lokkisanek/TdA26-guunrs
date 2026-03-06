@@ -1,11 +1,14 @@
 FROM node:20-alpine
 
-RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache python3 make g++ openssl
 
 WORKDIR /app
 
 COPY package.json ./
 RUN npm install
+
+ENV PORT=3000
+ENV DATABASE_URL="file:./dev.db"
 
 # Copy Prisma schema and generate client
 COPY prisma ./prisma
@@ -19,7 +22,6 @@ COPY tsconfig.json ./
 # Create uploads directory
 RUN mkdir -p /app/uploads
 
-ENV PORT=3000
 EXPOSE 3000
 
 # Run Prisma migrations and start with tsx
